@@ -1,4 +1,14 @@
-[TOC]
+- [Java 接口和抽象类有什么区别？](#java-接口和抽象类有什么区别)
+- [String，StringBuilder 和 StringBuffer 的区别？](#stringstringbuilder-和-stringbuffer-的区别)
+- [final、finally、finalize 三个关键字的区别？](#finalfinallyfinalize-三个关键字的区别)
+- [== 和 equals 的区别，给段代码判断下 “==” 和 equals 的返回值](#-和-equals-的区别给段代码判断下--和-equals-的返回值)
+- [Java 基本数据类型有几种，每一种的区别是什么？](#java-基本数据类型有几种每一种的区别是什么)
+- [值传递和引用传递的区别？](#值传递和引用传递的区别)
+- [Java 的异常体系？受检查和非受检查异常区别？](#java-的异常体系受检查和非受检查异常区别)
+- [序列化和反序列化](#序列化和反序列化)
+- [反射和泛型](#反射和泛型)
+
+
 
 ### Java 接口和抽象类有什么区别？
 

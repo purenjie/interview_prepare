@@ -1,0 +1,163 @@
+反转链表可以用两种思路来解决：
+
+1. 递归
+2. 迭代
+
+用递归的方式操作链表并不高效。两者时间复杂度都是 O(N)，但是递归空间复杂度未 O(N)。所以链表问题优先考虑使用迭代的方法。
+
+```java
+public class ReverseList {
+    public static void main(String[] args) {
+        int[] nums = {1, 2, 3, 4, 5};
+        ReverseList rl = new ReverseList();
+
+        ListNode head = rl.createList(nums);
+        System.out.println(rl.listToString(head)); // 1->2->3->4->5->null
+
+        // 1. 反转整个链表
+        System.out.println(rl.listToString(rl.reverseSingeListRecursive(head))); // 递归反转
+        head = rl.createList(nums);
+        System.out.println(rl.listToString(rl.reverseSingleListIterator(head))); // 迭代反转
+
+        // 2. 反转链表前 N 个节点
+        head = rl.createList(nums);
+        System.out.println(rl.listToString(rl.reverseNRecrusive(head, 3))); // 递归反转
+        head = rl.createList(nums);
+        System.out.println(rl.listToString(rl.reverseNIterator(head, 3))); // 迭代反转
+
+        // 3. 反转链表 m-n 的节点
+        head = rl.createList(nums);
+        System.out.println(rl.listToString(rl.reverseBetweenRecursive(head, 2, 4))); // 递归反转
+        head = rl.createList(nums);
+        System.out.println(rl.listToString(rl.reverseBetweenIterator(head, 2, 4))); // 迭代反转
+
+        // 迭代 k 个一组反转链表
+        head = rl.createList(nums);
+        System.out.println(rl.listToString(rl.reverseKGroup(head, 3)));
+    }
+
+    public ListNode createList(int[] nums) {
+        if(nums == null || nums.length == 0) {
+            return null;
+        }
+        ListNode head = new ListNode(nums[0]);
+        ListNode cur = head;
+        for(int i = 1; i < nums.length; i++) {
+            cur.next = new ListNode(nums[i]);
+            cur = cur.next;
+        }
+        return head;
+    }
+
+    public ListNode reverseSingeListRecursive(ListNode head) { // 递归反转整个链表
+        // base case 只有一个节点或没有节点
+        if(head == null || head.next == null) {
+            return head;
+        }
+        ListNode last = reverseSingeListRecursive(head.next);
+        head.next.next = head;
+        head.next = null;
+        return last;
+    }
+
+    public ListNode reverseSingleListIterator(ListNode head) { // 迭代反转整个链表
+        // 三个指针
+        // pre 指向反转后链表的下一个节点
+        // cur 指向反转的头节点
+        // next 作为工具暂存 cur 的下一个节点
+        ListNode pre = null; // 反转整个链表，所以 pre 指向尾节点的下一个节点 null
+        ListNode cur = head, next = head;
+        while(cur != null) {
+            next = cur.next;
+            cur.next = pre;
+            pre = cur;
+            cur = next;
+        }
+        return pre;
+    }
+
+    public static ListNode successor = null;
+    public ListNode reverseNRecrusive(ListNode head, int n) { // 递归反转链表前 N 个节点
+        if(n == 1) {
+            successor = head.next; // head.next 要指向第 N+1 个节点，存储下来
+            return head;
+        }
+        ListNode last = reverseNRecrusive(head.next, n - 1);
+        head.next.next = head;
+        head.next = successor;
+        return last;
+    }
+
+    public ListNode reverseNIterator(ListNode head, int n) { // 迭代反转链表前 N 个节点
+        // 假定 n 是有意义的
+        ListNode nNext = head;
+        for(int i = 0; i < n; i++)  nNext = nNext.next;
+
+        ListNode pre = nNext; // 反转前 N 个节点，pre 指向第 N+1 个节点
+        ListNode cur = head, next = head;
+        while(cur != nNext) {
+            next = cur.next;
+            cur.next = pre;
+            pre = cur;
+            cur = next;
+        }
+        return pre;
+    }
+
+
+    public ListNode reverseBetweenRecursive(ListNode head, int m, int n) { // 递归反转链表 m-n 的节点
+        // base case 反转前 N 个节点时
+        if(m == 1) {
+            return reverseNRecrusive(head, n);
+        }
+
+        // 子链表反转 [m-1, n-1]
+        head.next = reverseBetweenRecursive(head.next, m - 1, n - 1);
+        return head;
+    }
+
+    public ListNode reverseBetweenIterator(ListNode head, int m, int n) { // 迭代反转链表 m-n 的节点
+        if(head == null)    return null;
+        ListNode a = head, b = head;
+        for(int i = 1; i <= n; i++) {
+            if(i == m)  a = b;
+            b = b.next;
+        }
+        ListNode pre = b; // 反转 [m, n] pre 指向第 n+1 个节点
+        ListNode cur = a, next = a;
+        while(cur != b) {
+            next = cur.next;
+            cur.next = pre;
+            pre = cur;
+            cur = next;
+        }
+        head.next = pre;
+        return head;
+    }
+
+    public ListNode reverseKGroup(ListNode head, int k) { // 迭代 k 个一组反转链表
+        if(head == null)    return null;
+        ListNode a, b; // 区间 [a, b) 包含 k 个待反转元素
+        a = b = head;
+        for(int i = 0; i < k; i++) {
+            if(b == null)   return head; // 不足 k 个不反转
+            b = b.next;
+        }
+
+        ListNode nextHead = reverseNIterator(a, k);
+        a.next = reverseKGroup(b, k);
+        return nextHead;
+    }
+
+    public String listToString(ListNode head) {
+        StringBuilder sb = new StringBuilder();
+        while(head != null) {
+            sb.append(head.val).append("->");
+            head = head.next;
+        }
+        sb.append("null");
+        return sb.toString();
+    }
+
+}
+```

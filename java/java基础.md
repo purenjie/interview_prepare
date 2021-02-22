@@ -1,14 +1,70 @@
-- [Java 接口和抽象类有什么区别？](#java-接口和抽象类有什么区别)
-- [String，StringBuilder 和 StringBuffer 的区别？](#stringstringbuilder-和-stringbuffer-的区别)
-- [final、finally、finalize 三个关键字的区别？](#finalfinallyfinalize-三个关键字的区别)
-- [== 和 equals 的区别，给段代码判断下 “==” 和 equals 的返回值](#-和-equals-的区别给段代码判断下--和-equals-的返回值)
-- [Java 基本数据类型有几种，每一种的区别是什么？](#java-基本数据类型有几种每一种的区别是什么)
-- [值传递和引用传递的区别？](#值传递和引用传递的区别)
-- [Java 的异常体系？受检查和非受检查异常区别？](#java-的异常体系受检查和非受检查异常区别)
-- [序列化和反序列化](#序列化和反序列化)
-- [反射和泛型](#反射和泛型)
+- [面向对象的特征：封装、继承、多态](#----------------)
+  * [封装](#--)
+  * [继承](#--)
+  * [多态](#--)
+- [Java 接口和抽象类有什么区别？](#java-------------)
+- [String，StringBuilder 和 StringBuffer 的区别？](#string-stringbuilder---stringbuffer-----)
+- [final、finally、finalize 三个关键字的区别？](#final-finally-finalize----------)
+- [== 和 equals 的区别，给段代码判断下 “==” 和 equals 的返回值](#-----equals--------------------equals-----)
+- [Java 基本数据类型有几种，每一种的区别是什么？](#java---------------------)
+- [值传递和引用传递的区别？](#------------)
+- [Java 的异常体系？受检查和非受检查异常区别？](#java--------------------)
+- [序列化和反序列化](#--------)
+- [反射和泛型](#-----)
+  * [反射](#--)
+  * [泛型](#--)
 
 
+
+### 面向对象的特征：封装、继承、多态
+
+#### 封装
+
+把内部实现细节封装起来，对外暴露接口
+
+- 好处
+
+1. 减少耦合
+2. 隐藏内部细节（可以修改实现代码而不影响调用程序）
+3. 对成员变量进行更精确的控制（通过 getter 和 setter 方法）
+
+#### 继承
+
+- 三句话
+
+子类拥有父类非 private 的属性和方法（同一包下）
+
+子类可以拥有自己属性和方法，即子类可以对父类进行扩展
+
+子类可以对父类方法重写（Overriding）
+
+- 三个东西
+
+构造器、protected 关键字、向上转型
+
+- 好处
+
+方便代码的复用，提高开发效率
+
+#### 多态
+
+- 分类
+
+编译时多态：方法的重载（Overloading），方法名相同，参数列表不同
+
+运行时多态：方法的重写（Overriding）
+
+- 运行时多态
+
+在执行期间判断所引用对象的实际类型，根据其实际的类型调用其相应的方法。
+
+三个条件：继承、重写、向上转型
+
+`Person p = new Student()`
+
+[面向对象编程三大特性 ------ 封装、继承、多态](https://blog.csdn.net/jianyuerensheng/article/details/51602015)
+
+[重新认识 java（五） ---- 面向对象之多态（向上转型与向下转型）](https://blog.csdn.net/qq_31655965/article/details/54746235#t6)
 
 ### Java 接口和抽象类有什么区别？
 
@@ -236,7 +292,94 @@ public class ObjectOutputStreamTest {
 
 ### 反射和泛型
 
+#### 反射
+
+**反射的功能**
+
+JAVA 反射机制是在运行状态中，对于任意一个类，都能够知道这个类的所有属性和方法；对于任意一个对象，都能够调用它的任意一个方法和属性；这种动态获取的信息以及动态调用对象的方法的功能称为 java 语言的反射机制。
+
+- 在运行时判断任意一个对象所属的类 `obj.getClass()`
+
+- 在运行时构造任意一个类的对象 `Object obj = constructor.getConstructor().newInstance()`
+
+- 在运行时判断任意一个类所具有的成员变量和方法（通过反射甚至可以调用 private 方法）`methodArray = stuClass.getDeclaredMethods()/stuClass.getDeclaredFields();`
+
+- 在运行时调用任意一个对象的方法 `stuClass.getMethod("show1", String.class).invoke(obj, "刘德华")`
+
+**反射相关 API**
+
+- 获取 Class 对象的三种方式
+
+1. `obj.getClass()` Object 类的方法
+
+2.  任何数据类型（包括基本数据类型）都有一个静态的 class 属性 `Student.class、String.class`
+
+3.  通过Class类的静态方法：`Class.forName()` *常用*
+
+- 获取构造方法
+
+```java
+// 批量的方法
+public Constructor[] getConstructors()：所有"公有的"构造方法
+public Constructor[] getDeclaredConstructors()：获取所有的构造方法(包括私有、受保护、默认、公有)
+// 单个方法调用
+public Constructor getConstructor(Class... parameterTypes):获取单个的"公有的"构造方法：
+public Constructor getDeclaredConstructor(Class... parameterTypes):获取"某个构造方法"可以是私有的，或受保护、默认、公有；
+// 调用构造方法创建对象
+Constructor-->newInstance(Object... initargs)
+```
+
+- 获取成员变量
+
+```java
+// 批量的方法
+Field[] getFields():获取所有的"公有字段"
+Field[] getDeclaredFields():获取所有字段，包括：私有、受保护、默认、公有；
+// 单个方法调用
+public Field getField(String fieldName):获取某个"公有的"字段；
+public Field getDeclaredField(String fieldName):获取某个字段(可以是私有的)
+// 设置字段值
+Field --> public void set(Object obj,Object value):
+```
+
+- 获取成员方法
+
+```java
+// 批量的方法
+public Method[] getMethods():获取所有"公有方法"；（包含了父类的方法也包含Object类）
+public Method[] getDeclaredMethods():获取所有的成员方法，包括私有的(不包括继承的)
+// 单个方法调用
+public Method getMethod(String name,Class<?>... parameterTypes):
+public Method getDeclaredMethod(String name,Class<?>... parameterTypes)
+// 调用方法
+Method --> public Object invoke(Object obj,Object... args)
+```
+
+**反射的用途**
+
+- 通过反射运行配置文件内容
+- 通过反射越过泛型检查
+- JDBC 的数据库的连接
+- Spring 框架的使用
+
+[#强烈推荐 Java 基础之 — 反射（非常重要）](https://blog.csdn.net/sinat_38259539/article/details/71799078)
+
+[Reflection：Java 反射机制的应用场景](https://segmentfault.com/a/1190000010162647)
+
+**反射优缺点**
+
+- 优点
+  - 运行期类型的判断，动态类加载：提高代码灵活度
+- 缺点
+  - 性能开销大
+  - 需要没有安全限制的环境
+  - 内部暴露可能导致意料之外副作用
+
 [CS-Notes 反射](https://github.com/CyC2018/CS-Notes/blob/master/notes/Java%20%E5%9F%BA%E7%A1%80.md#toc30)
+
+#### 泛型
+
+
 
 
 

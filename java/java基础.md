@@ -1,30 +1,31 @@
-<!-- vscode-markdown-toc -->
-	* 1. [面向对象的特征：封装、继承、多态](#)
-		* 1.1. [封装](#-1)
-		* 1.2. [继承](#-1)
-		* 1.3. [多态](#-1)
-	* 2. [Java 接口和抽象类有什么区别？](#Java)
-	* 3. [String，StringBuilder 和 StringBuffer 的区别？](#StringStringBuilderStringBuffer)
-	* 4. [final、finally、finalize 三个关键字的区别？](#finalfinallyfinalize)
-	* 5. [== 和 equals 的区别，给段代码判断下 “==” 和 equals 的返回值](#equalsequals)
-	* 6. [Java 基本数据类型有几种，每一种的区别是什么？](#Java-1)
-	* 7. [值传递和引用传递的区别？](#-1)
-	* 8. [Java 的异常体系？受检查和非受检查异常区别？](#Java-1)
-	* 9. [序列化和反序列化](#-1)
-	* 10. [反射和泛型](#-1)
-		* 10.1. [反射](#-1)
-		* 10.2. [泛型](#-1)
+<!-- TOC -->
 
-<!-- vscode-markdown-toc-config
-	numbering=true
-	autoSave=true
-	/vscode-markdown-toc-config -->
-<!-- /vscode-markdown-toc -->
+- [面向对象的特征：封装、继承、多态](#面向对象的特征封装继承多态)
+  - [封装](#封装)
+  - [继承](#继承)
+  - [多态](#多态)
+- [Java 接口和抽象类有什么区别？](#java-接口和抽象类有什么区别)
+- [String，StringBuilder 和 StringBuffer 的区别？](#stringstringbuilder-和-stringbuffer-的区别)
+- [final、finally、finalize 三个关键字的区别？](#finalfinallyfinalize-三个关键字的区别)
+- [== 和 equals 的区别，给段代码判断下 “==” 和 equals 的返回值](#-和-equals-的区别给段代码判断下--和-equals-的返回值)
+- [Java 基本数据类型有几种，每一种的区别是什么？](#java-基本数据类型有几种每一种的区别是什么)
+- [值传递和引用传递的区别？](#值传递和引用传递的区别)
+- [Java 的异常体系？受检查和非受检查异常区别？](#java-的异常体系受检查和非受检查异常区别)
+- [序列化和反序列化](#序列化和反序列化)
+- [反射和泛型](#反射和泛型)
+  - [反射](#反射)
+  - [泛型](#泛型)
+- [hashCode() 与 equals()](#hashcode-与-equals)
+  - [hashCode() 介绍](#hashcode-介绍)
+  - [为什么要有 hashCode？](#为什么要有-hashcode)
+  - [为什么重写 equals 时必须重写 hashCode 方法？](#为什么重写-equals-时必须重写-hashcode-方法)
+
+<!-- /TOC -->
 
 
-###  1. <a name=''></a>面向对象的特征：封装、继承、多态
+### 面向对象的特征：封装、继承、多态
 
-####  1.1. <a name='-1'></a>封装
+#### 封装
 
 把内部实现细节封装起来，对外暴露接口
 
@@ -34,7 +35,7 @@
 2. 隐藏内部细节（可以修改实现代码而不影响调用程序）
 3. 对成员变量进行更精确的控制（通过 getter 和 setter 方法）
 
-####  1.2. <a name='-1'></a>继承
+#### 继承
 
 - 三句话
 
@@ -52,7 +53,7 @@
 
 方便代码的复用，提高开发效率
 
-####  1.3. <a name='-1'></a>多态
+#### 多态
 
 - 分类
 
@@ -72,7 +73,7 @@
 
 [重新认识 java（五） ---- 面向对象之多态（向上转型与向下转型）](https://blog.csdn.net/qq_31655965/article/details/54746235#t6)
 
-###  2. <a name='Java'></a>Java 接口和抽象类有什么区别？
+### Java 接口和抽象类有什么区别？
 
 |             |           抽象类           |                接口                |
 | ----------- | :------------------------: | :--------------------------------: |
@@ -90,7 +91,7 @@
 
 *注：接口中可以定义静态的 main 方法并成功运行，但是不符合接口的设计原则，也没有什么意义。*
 
-###  3. <a name='StringStringBuilderStringBuffer'></a>String，StringBuilder 和 StringBuffer 的区别？
+### String，StringBuilder 和 StringBuffer 的区别？
 
 |               | 可变性 | 线程安全 |             速度              |
 | :-----------: | :----: | :------: | :---------------------------: |
@@ -106,7 +107,7 @@
 
 字符串改变 & 多线程——> StringBuffer
 
-###  4. <a name='finalfinallyfinalize'></a>final、finally、finalize 三个关键字的区别？
+### final、finally、finalize 三个关键字的区别？
 
 **final**——修饰符，可以修饰 `数据`、`方法` 和 `类`
 
@@ -128,7 +129,7 @@ try 和 finally 同时有 return 语句时，try 的 return 语句不会执行
 protected void finalize() throws Throwable {}
 ```
 
-###  5. <a name='equalsequals'></a>== 和 equals 的区别，给段代码判断下 “==” 和 equals 的返回值
+### == 和 equals 的区别，给段代码判断下 “==” 和 equals 的返回值
 
 |          |             ==             |     equals()     |
 | -------- | :------------------------: | :--------------: |
@@ -173,7 +174,7 @@ public boolean equals(Object other) {
 }
 ```
 
-###  6. <a name='Java-1'></a>Java 基本数据类型有几种，每一种的区别是什么？
+### Java 基本数据类型有几种，每一种的区别是什么？
 
 8 种
 
@@ -188,7 +189,7 @@ public boolean equals(Object other) {
 | boolean  | 1/8         | false        | Boolean   |
 | char     | 2           | \u0000(null) | Character |
 
-###  7. <a name='-1'></a>值传递和引用传递的区别？
+### 值传递和引用传递的区别？
 
 值传递（call by value）：表示方法接收的是调用者提供的值。
 引用传递 (call by reference) ：表示方法接收的是调用者提供的变量地址。
@@ -203,7 +204,7 @@ Java 中方法参数的使用情况：
 
 *注：Java 会 `复制` 传入方法的参数值，基本数据类型时复制数字（或字符等）值，引用数据类型时复制参数存储的内存地址。**无论如何在方法内部的参数都是原来的副本，即多了一个指向对象的指针**，不可能改变原来变量的内容。*
 
-###  8. <a name='Java-1'></a>Java 的异常体系？受检查和非受检查异常区别？
+### Java 的异常体系？受检查和非受检查异常区别？
 
 - 异常体系
 
@@ -246,7 +247,7 @@ Exception 是**程序本身可以处理**的异常，这种异常分两大类运
 
 [Java 检查异常和非检查异常区别](https://blog.csdn.net/tanga842428/article/details/52751303)
 
-###  9. <a name='-1'></a>序列化和反序列化
+### 序列化和反序列化
 
 - 是什么？
 
@@ -296,9 +297,9 @@ public class ObjectOutputStreamTest {
 
 [Java 对象的序列化（Serialization）和反序列化详解](https://blog.csdn.net/yaomingyang/article/details/79321939)
 
-###  10. <a name='-1'></a>反射和泛型
+### 反射和泛型
 
-####  10.1. <a name='-1'></a>反射
+#### 反射
 
 **反射的功能**
 
@@ -381,15 +382,32 @@ Method --> public Object invoke(Object obj,Object... args)
 
 [CS-Notes 反射](https://github.com/CyC2018/CS-Notes/blob/master/notes/Java%20%E5%9F%BA%E7%A1%80.md#toc30)
 
-####  10.2. <a name='-1'></a>泛型
+#### 泛型
 
-待补充
+待整理
 
+### hashCode() 与 equals()
 
+#### hashCode() 介绍
 
+hashCode() 的作用是获取哈希码,返回一个 int 整数。hashCode() 定义在 JDK 的 Object 类中，该方法通常用来将对象的 内存地址 转换为整数之后返回。
 
+HashSet 和 HashMap 等集合类使用了 hashCode() 方法来计算对象应该存储的位置，因此要将对象添加到这些集合类中，需要让对应的类实现 hashCode() 方法。
 
+#### 为什么要有 hashCode？
 
+equals() 方法比较起来复杂，效率较低。先用 hashCode() 比较，当 hashCode() 值相同时再用 equals() 比较，提高执行速度。
 
+#### 为什么重写 equals 时必须重写 hashCode 方法？
+
+官方文档上提到，如果两个对象 equals() 为 true，那么他们 hashCode() 的结果应该相同。如果重写 equals 时没有重写 hashCode 方法，会出现 equals() 为 true 但是 hashCode() 值不同的情况。
+
+![hashCode.png](https://i.loli.net/2021/02/23/7wrVCNaqP3bX5y4.png)
+
+hashCode 方法用于散列集合的查找，equals 方法用于判断两个对象是否相等。
+
+因为如果只重写了 equals 方法没有重写 hashCode 方法，两个对象 equals 返回了 true，但是执行 hashCode 方法时按照内存地址返回的值不同，集合会插入重复元素（对象的值相同但是内存地址不同）。
+
+[三 hashCode() 与 equals()（重要）](https://github.com/Snailclimb/JavaGuide/blob/master/docs/essential-content-for-interview/PreparingForInterview/%E5%BA%94%E5%B1%8A%E7%94%9F%E9%9D%A2%E8%AF%95%E6%9C%80%E7%88%B1%E9%97%AE%E7%9A%84%E5%87%A0%E9%81%93Java%E5%9F%BA%E7%A1%80%E9%97%AE%E9%A2%98.md#%E4%B8%89-hashcode-%E4%B8%8E-equals%E9%87%8D%E8%A6%81)
 
 

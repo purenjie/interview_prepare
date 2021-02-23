@@ -151,7 +151,7 @@ public double findMedianSortedArrays(int[] nums1, int[] nums2) {
     int totalLength = length1 + length2;
     if (totalLength % 2 == 1) {
         int midIndex = totalLength / 2;
-        double median = getKthElement(nums1, nums2, midIndex + 1);
+        double median = getKthElement(nums1, nums2, midIndex + 1); // 第 k 个，不是索引所以 +1
         return median;
     } else {
         int midIndex1 = totalLength / 2 - 1, midIndex2 = totalLength / 2;
@@ -177,8 +177,8 @@ public int getKthElement(int[] nums1, int[] nums2, int k) {
 
     while (true) {
         // 边界情况
-        if (index1 == length1) {
-            return nums2[index2 + k - 1];
+        if (index1 == length1) { // 考虑 nums1 = []
+            return nums2[index2 + k - 1]; // 考虑 nums2 = [1]
         }
         if (index2 == length2) {
             return nums1[index1 + k - 1];
@@ -189,12 +189,12 @@ public int getKthElement(int[] nums1, int[] nums2, int k) {
 
         // 正常情况
         int half = k / 2;
-        int newIndex1 = Math.min(index1 + half, length1) - 1;
+        int newIndex1 = Math.min(index1 + half, length1) - 1; // 取不到 nums[length]
         int newIndex2 = Math.min(index2 + half, length2) - 1;
         int pivot1 = nums1[newIndex1], pivot2 = nums2[newIndex2];
         if (pivot1 <= pivot2) {
-            k -= (newIndex1 - index1 + 1);
-            index1 = newIndex1 + 1;
+            k -= (newIndex1 - index1 + 1); // 考虑 nums1=[1] newIndex1==index1
+            index1 = newIndex1 + 1; // 考虑 nums1=[1] index1==length1
         } else {
             k -= (newIndex2 - index2 + 1);
             index2 = newIndex2 + 1;
@@ -266,12 +266,13 @@ class Solution {
         while(x != 0) {
             int mod = x % 10;
             x /= 10;
-            if(res > Integer.MAX_VALUE / 10 || (res == Integer.MAX_VALUE && mod > Integer.MAX_VALUE % 10)) {
+            if(res > Integer.MAX_VALUE / 10 || (res == Integer.MAX_VALUE / 10 && mod > Integer.MAX_VALUE % 10)) { // 大于大于
                 return 0;
             }
-            if(res < Integer.MIN_VALUE / 10 || (res == Integer.MIN_VALUE && mod > Integer.MIN_VALUE % 10)) {
+            if(res < Integer.MIN_VALUE / 10 || (res == Integer.MIN_VALUE / 10 && mod < Integer.MIN_VALUE % 10)) { // 小于小于
                 return 0;
             }
+
             res = res * 10 + mod;
         }
         return res;
@@ -279,7 +280,93 @@ class Solution {
 }
 ```
 
+#### [8. 字符串转换整数 (atoi)](https://leetcode-cn.com/problems/string-to-integer-atoi/)
 
+```
+输入：s = "42"
+输出：42
+解释：加粗的字符串为已经读入的字符，插入符号是当前读取的字符。
+第 1 步："42"（当前没有读入字符，因为没有前导空格）
+         ^
+第 2 步："42"（当前没有读入字符，因为这里不存在 '-' 或者 '+'）
+         ^
+第 3 步："42"（读入 "42"）
+           ^
+解析得到整数 42 。
+由于 "42" 在范围 [-231, 231 - 1] 内，最终结果为 42 。
+```
+
+```java
+public class Solution {
+
+    public int myAtoi(String str) {
+        int index = 0;
+        char[] s = str.toCharArray();
+        // 去除前导空格
+        while(index < s.length && s[index] == ' ')  index++;
+
+        if(index == s.length)   return 0; // "    "
+
+        int sign = 1;
+        if(s[index] == '-' || s[index] == '+') {
+            sign = s[index] == '-' ? -1 : 1;
+            index++;
+        }
+
+        int res = 0;
+        while(index < s.length) {
+            if(s[index] > '9' || s[index] < '0')    break; // 不是数字跳出
+
+            int mod = s[index] - '0';
+            // 溢出判断
+            if(res > Integer.MAX_VALUE / 10 || (res == Integer.MAX_VALUE / 10 && mod > Integer.MAX_VALUE % 10)) {
+                return Integer.MAX_VALUE;
+            } 
+            if(res < Integer.MIN_VALUE / 10 || (res == Integer.MIN_VALUE / 10 && mod > -(Integer.MIN_VALUE % 10))) {
+                return Integer.MIN_VALUE;
+            }
+
+            res = res * 10 + sign * mod;
+            index++;
+        }
+        return res;
+    }
+
+}
+```
+
+#### [11. 盛最多水的容器](https://leetcode-cn.com/problems/container-with-most-water/)
+
+```
+输入：[1,8,6,2,5,4,8,3,7]
+输出：49 
+解释：图中垂直线代表输入数组 [1,8,6,2,5,4,8,3,7]。在此情况下，容器能够容纳水（表示为蓝色部分）的最大值为 49。
+```
+
+```java
+class Solution {
+    public int maxArea(int[] height) {
+        // 双指针向中间靠拢
+        // 矩形面积 = (right - left) * min(height[left], height[right])
+        // 左右两边较小的那个向中间靠拢
+        int left = 0, right = height.length - 1;
+        int res = 0;
+        while(left < right) {
+            int width = right - left;
+            if(height[left] < height[right]) {
+                int h = height[left];
+                res = res > h * width ? res : h * width;
+                left++;
+            } else {
+                int h = height[right];
+                res = res > h * width ? res : h * width;
+                right--;
+            }
+        }
+        return res;
+    }
+}
+```
 
 Todo:
 

@@ -1,24 +1,30 @@
-- [面向对象的特征：封装、继承、多态](#----------------)
-  * [封装](#--)
-  * [继承](#--)
-  * [多态](#--)
-- [Java 接口和抽象类有什么区别？](#java-------------)
-- [String，StringBuilder 和 StringBuffer 的区别？](#string-stringbuilder---stringbuffer-----)
-- [final、finally、finalize 三个关键字的区别？](#final-finally-finalize----------)
-- [== 和 equals 的区别，给段代码判断下 “==” 和 equals 的返回值](#-----equals--------------------equals-----)
-- [Java 基本数据类型有几种，每一种的区别是什么？](#java---------------------)
-- [值传递和引用传递的区别？](#------------)
-- [Java 的异常体系？受检查和非受检查异常区别？](#java--------------------)
-- [序列化和反序列化](#--------)
-- [反射和泛型](#-----)
-  * [反射](#--)
-  * [泛型](#--)
+<!-- vscode-markdown-toc -->
+	* 1. [面向对象的特征：封装、继承、多态](#)
+		* 1.1. [封装](#-1)
+		* 1.2. [继承](#-1)
+		* 1.3. [多态](#-1)
+	* 2. [Java 接口和抽象类有什么区别？](#Java)
+	* 3. [String，StringBuilder 和 StringBuffer 的区别？](#StringStringBuilderStringBuffer)
+	* 4. [final、finally、finalize 三个关键字的区别？](#finalfinallyfinalize)
+	* 5. [== 和 equals 的区别，给段代码判断下 “==” 和 equals 的返回值](#equalsequals)
+	* 6. [Java 基本数据类型有几种，每一种的区别是什么？](#Java-1)
+	* 7. [值传递和引用传递的区别？](#-1)
+	* 8. [Java 的异常体系？受检查和非受检查异常区别？](#Java-1)
+	* 9. [序列化和反序列化](#-1)
+	* 10. [反射和泛型](#-1)
+		* 10.1. [反射](#-1)
+		* 10.2. [泛型](#-1)
+
+<!-- vscode-markdown-toc-config
+	numbering=true
+	autoSave=true
+	/vscode-markdown-toc-config -->
+<!-- /vscode-markdown-toc -->
 
 
+###  1. <a name=''></a>面向对象的特征：封装、继承、多态
 
-### 面向对象的特征：封装、继承、多态
-
-#### 封装
+####  1.1. <a name='-1'></a>封装
 
 把内部实现细节封装起来，对外暴露接口
 
@@ -28,7 +34,7 @@
 2. 隐藏内部细节（可以修改实现代码而不影响调用程序）
 3. 对成员变量进行更精确的控制（通过 getter 和 setter 方法）
 
-#### 继承
+####  1.2. <a name='-1'></a>继承
 
 - 三句话
 
@@ -46,7 +52,7 @@
 
 方便代码的复用，提高开发效率
 
-#### 多态
+####  1.3. <a name='-1'></a>多态
 
 - 分类
 
@@ -66,7 +72,7 @@
 
 [重新认识 java（五） ---- 面向对象之多态（向上转型与向下转型）](https://blog.csdn.net/qq_31655965/article/details/54746235#t6)
 
-### Java 接口和抽象类有什么区别？
+###  2. <a name='Java'></a>Java 接口和抽象类有什么区别？
 
 |             |           抽象类           |                接口                |
 | ----------- | :------------------------: | :--------------------------------: |
@@ -84,7 +90,7 @@
 
 *注：接口中可以定义静态的 main 方法并成功运行，但是不符合接口的设计原则，也没有什么意义。*
 
-### String，StringBuilder 和 StringBuffer 的区别？
+###  3. <a name='StringStringBuilderStringBuffer'></a>String，StringBuilder 和 StringBuffer 的区别？
 
 |               | 可变性 | 线程安全 |             速度              |
 | :-----------: | :----: | :------: | :---------------------------: |
@@ -100,7 +106,7 @@
 
 字符串改变 & 多线程——> StringBuffer
 
-### final、finally、finalize 三个关键字的区别？
+###  4. <a name='finalfinallyfinalize'></a>final、finally、finalize 三个关键字的区别？
 
 **final**——修饰符，可以修饰 `数据`、`方法` 和 `类`
 
@@ -122,7 +128,7 @@ try 和 finally 同时有 return 语句时，try 的 return 语句不会执行
 protected void finalize() throws Throwable {}
 ```
 
-### == 和 equals 的区别，给段代码判断下 “==” 和 equals 的返回值
+###  5. <a name='equalsequals'></a>== 和 equals 的区别，给段代码判断下 “==” 和 equals 的返回值
 
 |          |             ==             |     equals()     |
 | -------- | :------------------------: | :--------------: |
@@ -167,7 +173,7 @@ public boolean equals(Object other) {
 }
 ```
 
-### Java 基本数据类型有几种，每一种的区别是什么？
+###  6. <a name='Java-1'></a>Java 基本数据类型有几种，每一种的区别是什么？
 
 8 种
 
@@ -182,7 +188,7 @@ public boolean equals(Object other) {
 | boolean  | 1/8         | false        | Boolean   |
 | char     | 2           | \u0000(null) | Character |
 
-### 值传递和引用传递的区别？
+###  7. <a name='-1'></a>值传递和引用传递的区别？
 
 值传递（call by value）：表示方法接收的是调用者提供的值。
 引用传递 (call by reference) ：表示方法接收的是调用者提供的变量地址。
@@ -197,7 +203,7 @@ Java 中方法参数的使用情况：
 
 *注：Java 会 `复制` 传入方法的参数值，基本数据类型时复制数字（或字符等）值，引用数据类型时复制参数存储的内存地址。**无论如何在方法内部的参数都是原来的副本，即多了一个指向对象的指针**，不可能改变原来变量的内容。*
 
-### Java 的异常体系？受检查和非受检查异常区别？
+###  8. <a name='Java-1'></a>Java 的异常体系？受检查和非受检查异常区别？
 
 - 异常体系
 
@@ -240,7 +246,7 @@ Exception 是**程序本身可以处理**的异常，这种异常分两大类运
 
 [Java 检查异常和非检查异常区别](https://blog.csdn.net/tanga842428/article/details/52751303)
 
-### 序列化和反序列化
+###  9. <a name='-1'></a>序列化和反序列化
 
 - 是什么？
 
@@ -290,9 +296,9 @@ public class ObjectOutputStreamTest {
 
 [Java 对象的序列化（Serialization）和反序列化详解](https://blog.csdn.net/yaomingyang/article/details/79321939)
 
-### 反射和泛型
+###  10. <a name='-1'></a>反射和泛型
 
-#### 反射
+####  10.1. <a name='-1'></a>反射
 
 **反射的功能**
 
@@ -357,10 +363,8 @@ Method --> public Object invoke(Object obj,Object... args)
 
 **反射的用途**
 
-- 通过反射运行配置文件内容
-- 通过反射越过泛型检查
+- Spring 通过反射运行 XML 配置文件内容，运行时动态加载需要加载的对象（根据配置文件加载不同的对象或类，调用不同的方法）
 - JDBC 的数据库的连接
-- Spring 框架的使用
 
 [#强烈推荐 Java 基础之 — 反射（非常重要）](https://blog.csdn.net/sinat_38259539/article/details/71799078)
 
@@ -377,7 +381,9 @@ Method --> public Object invoke(Object obj,Object... args)
 
 [CS-Notes 反射](https://github.com/CyC2018/CS-Notes/blob/master/notes/Java%20%E5%9F%BA%E7%A1%80.md#toc30)
 
-#### 泛型
+####  10.2. <a name='-1'></a>泛型
+
+待补充
 
 
 

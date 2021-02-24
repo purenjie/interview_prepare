@@ -1,6 +1,23 @@
 [LeetCode 精选 TOP 面试题](https://leetcode-cn.com/problemset/leetcode-top/)
+<!-- TOC -->
 
-#### [1. 两数之和](https://leetcode-cn.com/problems/two-sum/)
+- [1. 两数之和](#1-两数之和)
+- [15. 三数之和](#15-三数之和)
+- [2. 两数相加](#2-两数相加)
+- [3. 无重复字符的最长子串](#3-无重复字符的最长子串)
+- [4. 寻找两个正序数组的中位数 #hard](#4-寻找两个正序数组的中位数-hard)
+- [5. 最长回文子串](#5-最长回文子串)
+- [7. 整数反转](#7-整数反转)
+- [8. 字符串转换整数 (atoi)](#8-字符串转换整数-atoi)
+- [10. 正则表达式匹配 #hard](#10-正则表达式匹配-hard)
+- [11. 盛最多水的容器](#11-盛最多水的容器)
+- [13. 罗马数字转整数](#13-罗马数字转整数)
+- [14. 最长公共前缀](#14-最长公共前缀)
+
+<!-- /TOC -->
+#### 1. 两数之和
+
+[题目链接](https://leetcode-cn.com/problems/two-sum/)
 
 ```
 输入：nums = [2,7,11,15], target = 9
@@ -11,24 +28,107 @@
 ```java
 class Solution {
     public int[] twoSum(int[] nums, int target) {
-        if(nums == null || nums.length == 0)    return null;
-        // HashMap 存储，key 为 target - i， value 为 i 对应的索引，最后返回两个数的索引
         Map<Integer, Integer> map = new HashMap<>();
-        int[] res = new int[2];
+        // 将所有值存入哈系表
         for(int i = 0; i < nums.length; i++) {
-            if(map.containsKey(nums[i])) {
-                res[0] = map.get(nums[i]);
-                res[1] = i;
-                return res;
-            }
-            map.put(target - nums[i], i);
+            map.put(nums[i], i);
         }
-        return null;
+        // 遍历数组寻找 twoSum
+        for(int i = 0; i < nums.length; i++) {
+            int other = target - nums[i];
+            // 哈系表中有 other 且不是 nums[i] 本身
+            if(map.containsKey(other) && map.get(other) != i) {
+                return new int[] {i, map.get(other)};
+            }
+        }
+        return new int[] {-1, -1};
     }
 }
 ```
 
-#### [2. 两数相加](https://leetcode-cn.com/problems/add-two-numbers/)
+> [167. 两数之和 II - 输入有序数组](https://leetcode-cn.com/problems/two-sum-ii-input-array-is-sorted/)
+
+```java
+// 当数组有序时考虑双指针的方法
+// 题目假设只有一个解
+class Solution {
+    public int[] twoSum(int[] numbers, int target) {
+        int left = 0, right = numbers.length - 1;
+        for(int i = 0; i < numbers.length; i++) {
+            int sum = numbers[left] + numbers[right];
+            if(sum == target)   return new int[] {left + 1, right + 1};
+            else if(sum < target)   left++;
+            else    right--;
+        }
+        return new int[] {-1, -1};
+    }
+}
+```
+
+#### 15. 三数之和
+
+[题目链接](https://leetcode-cn.com/problems/3sum/)
+
+```
+输入：nums = [-1,0,1,2,-1,-4]
+输出：[[-1,-1,2],[-1,0,1]]
+```
+
+```java
+class Solution {
+    public List<List<Integer>> threeSum(int[] nums) {
+        // 首先对数组排序
+        Arrays.sort(nums);
+        List<List<Integer>> res = new ArrayList<>();
+        // 遍历数组，从左到右
+        for(int i = 0; i < nums.length; i++) { 
+            int target = 0 - nums[i];
+            List<List<Integer>> tuples = new ArrayList<>();
+            // 转换为 twoSum 问题
+            tuples = twoSum(nums, i + 1, target);
+            // 给每一个符合条件的结果加上当前的值凑成 3 个数
+            for(List tuple : tuples) {
+                tuple.add(nums[i]);
+                res.add(tuple);
+            }
+            // 为了保证结果不重复，同一个数只能用一次
+            while(i + 1 < nums.length && nums[i] == nums[i + 1])     i++;
+        }
+        return res;
+    }
+
+    public List<List<Integer>> twoSum(int[] nums, int start, int target) {
+        List<List<Integer>> res = new ArrayList<>();
+        // 返回所有可能的 twoSum 结果，结果不能有重复
+        // 有序数组双指针，只不过 left 不一定是从 0 开始
+        int left = start, right = nums.length - 1;
+        while(left < right) {
+            int sum = nums[left] + nums[right];
+            // leftVal 和 rightVal 用于后面的比较（保证没有重复结果）
+            int leftVal = nums[left], rightVal = nums[right];
+            if(sum == target) {
+                // Arrays.asList(T... a) 泛型
+                res.add(new ArrayList<>(Arrays.asList(nums[left], nums[right])));
+                // 为了保证结果不重复，同一个数只能用一次
+                while(left < right && nums[left] == leftVal)    left++;
+                while(left < right && nums[right] == rightVal)  right--;
+            } else if(sum < target) {
+                while(left < right && nums[left] == leftVal)    left++;
+            } else {
+                while(left < right && nums[right] == rightVal)  right--;
+            }
+        }
+        return res;
+    }
+
+}
+```
+
+> 四数之和及 nSum 问题，之后需要单独整理一篇 nSum 问题模板，递归思路调用
+
+#### 2. 两数相加
+
+[题目链接](https://leetcode-cn.com/problems/add-two-numbers/)
 
 ```
 输入：l1 = [2,4,3], l2 = [5,6,4]
@@ -68,7 +168,9 @@ class Solution {
 }
 ```
 
-#### [3. 无重复字符的最长子串](https://leetcode-cn.com/problems/longest-substring-without-repeating-characters/)
+#### 3. 无重复字符的最长子串
+
+[题目链接](https://leetcode-cn.com/problems/longest-substring-without-repeating-characters/)
 
 ```
 输入: s = "abcabcbb"
@@ -117,7 +219,9 @@ class Solution {
 }
 ```
 
-#### [4. 寻找两个正序数组的中位数](https://leetcode-cn.com/problems/median-of-two-sorted-arrays/)
+#### 4. 寻找两个正序数组的中位数 #hard
+
+[题目链接](https://leetcode-cn.com/problems/median-of-two-sorted-arrays/)
 
 ```
 输入：nums1 = [1,3], nums2 = [2]
@@ -203,7 +307,9 @@ public int getKthElement(int[] nums1, int[] nums2, int k) {
 }
 ```
 
-#### [5. 最长回文子串](https://leetcode-cn.com/problems/longest-palindromic-substring/)
+#### 5. 最长回文子串
+
+[题目链接](https://leetcode-cn.com/problems/longest-palindromic-substring/)
 
 ```
 输入：s = "babad"
@@ -238,7 +344,9 @@ class Solution {
 }
 ```
 
-#### [7. 整数反转](https://leetcode-cn.com/problems/reverse-integer/)
+#### 7. 整数反转
+
+[题目链接](https://leetcode-cn.com/problems/reverse-integer/)
 
 ```
 输入：x = 123
@@ -280,7 +388,9 @@ class Solution {
 }
 ```
 
-#### [8. 字符串转换整数 (atoi)](https://leetcode-cn.com/problems/string-to-integer-atoi/)
+#### 8. 字符串转换整数 (atoi)
+
+[题目链接](https://leetcode-cn.com/problems/string-to-integer-atoi/)
 
 ```
 输入：s = "42"
@@ -335,7 +445,75 @@ public class Solution {
 }
 ```
 
-#### [11. 盛最多水的容器](https://leetcode-cn.com/problems/container-with-most-water/)
+#### 10. 正则表达式匹配 #hard
+
+[题目链接](https://leetcode-cn.com/problems/regular-expression-matching/)
+
+```
+输入：s = "aa" p = "a*"
+输出：true
+解释：因为 '*' 代表可以匹配零个或多个前面的那一个元素, 在这里前面的元素就是 'a'。因此，字符串 "aa" 可被视为 'a' 重复了一次。
+```
+
+- 解法一：“自顶向下”的带备忘录的递归解法（dp 函数）
+
+
+`dp 函数定义`：dp(s, 0, p, 0) s[i:] 和 p[j:] 能否匹配
+
+`base case`：p 到最后或 s 到最后
+
+`choice`：s[i] 和 p[j] 匹配；s[i] 和 p[j] 不匹配。另外需要考虑 p[j + 1] 是否为 *
+
+```java
+class Solution {
+    public boolean isMatch(String s, String p) {
+        return dp(s, 0, p, 0);
+    }
+
+    Map<String, Boolean> memo = new HashMap<>(); // 备忘录
+
+    // 1. dp() 含义：s[i:] 和 p[j:] 能否匹配
+    public boolean dp(String s, int i, String p, int j) {
+        int m = s.length(), n = p.length();
+        // 2. base case
+        if(j == n)  return i == m;  // p 到最后
+        if(i == m) { // s 到最后，p 不一定
+            if(j == n)  return true;
+            else {
+                if((n - j) % 2 != 0)    return false;
+                else {
+                    while(j + 1 < n) { // n 是长度，取不到
+                        if(p.charAt(j + 1) != '*')  return false;
+                        j += 2;
+                    }
+                    return true;
+                }
+            }
+        }
+        // 3. choice
+        String key = i + "," + j;
+        boolean res = false;
+        if(memo.containsKey(key))   return memo.get(key);
+        if(s.charAt(i) == p.charAt(j) || p.charAt(j) == '.') { // s[i] match p[j]
+            if(j + 1 < n && p.charAt(j + 1) == '*')     res = dp(s, i + 1, p, j) || dp(s, i, p, j + 2); // p 不变，s 后移；s 到头，p 移动 2 位 
+            else    res = dp(s, i + 1, p, j + 1);
+        } else { // s[i] dismatch p[j]
+            if(j + 1 < n && p.charAt(j + 1) == '*')     res = dp(s, i, p, j + 2); // 不匹配后移 2 位
+            else    res = false;
+        }
+
+        memo.put(key, res);
+        return res;
+    }
+}
+```
+
+- 解法二：“自底向上”的迭代解法（dp 数组）
+- 
+
+#### 11. 盛最多水的容器
+
+[题目链接](https://leetcode-cn.com/problems/container-with-most-water/)
 
 ```
 输入：[1,8,6,2,5,4,8,3,7]
@@ -364,6 +542,78 @@ class Solution {
             }
         }
         return res;
+    }
+}
+```
+
+#### 13. 罗马数字转整数
+
+[题目链接](https://leetcode-cn.com/problems/roman-to-integer/)
+
+```
+输入: "IV"
+输出: 4
+```
+
+```java
+class Solution {
+    public int romanToInt(String s) {
+        Map<Character, Integer> map = new HashMap<>();
+        map.put('I', 1);
+        map.put('V', 5);
+        map.put('X', 10);
+        map.put('L', 50);
+        map.put('C', 100);
+        map.put('D', 500);
+        map.put('M', 1000);
+
+        // 前一个值小于后一个时做减法，否则做加法
+        int sum = 0;
+
+        for(int i = 0; i < s.length(); i++) {
+            int curr = map.get(s.charAt(i));
+            if(i + 1 < s.length()) {
+                int next = map.get(s.charAt(i + 1));
+                if(curr < next) {
+                    sum -= curr;
+                } else {
+                    sum += curr;
+                }
+            }
+        }
+
+        sum += map.get(s.charAt(s.length() - 1));
+        return sum;
+    }
+}
+```
+
+#### 14. 最长公共前缀
+
+[题目链接](https://leetcode-cn.com/problems/longest-common-prefix/)
+
+```
+输入：strs = ["flower","flow","flight"]
+输出："fl"
+```
+
+取第一个字符串作为标准，遍历第一个字符串的每个字符，和剩下的所有字符串比较。
+当字符串长度到头或当前位置字符不相等时返回 [0:该字符索引]
+
+```java
+class Solution {
+    public String longestCommonPrefix(String[] strs) {
+        if(strs.length == 0)    return "";
+
+        String s = strs[0];
+        for(int i = 0; i < s.length(); i++) {
+            for(int j = 1; j < strs.length; j++) {
+                if(i >= strs[j].length() || strs[j].charAt(i) != s.charAt(i)) {
+                    return s.substring(0, i);
+                }
+            }
+        }
+        return s;
     }
 }
 ```

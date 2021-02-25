@@ -1,7 +1,7 @@
 [LeetCode 精选 TOP 面试题](https://leetcode-cn.com/problemset/leetcode-top/)
 <!-- TOC -->
 
-- [1. 两数之和](#1-两数之和)
+- [1. 两数之和 @哈希](#1-两数之和-哈希)
 - [15. 三数之和](#15-三数之和)
 - [2. 两数相加](#2-两数相加)
 - [3. 无重复字符的最长子串](#3-无重复字符的最长子串)
@@ -13,9 +13,13 @@
 - [11. 盛最多水的容器](#11-盛最多水的容器)
 - [13. 罗马数字转整数](#13-罗马数字转整数)
 - [14. 最长公共前缀](#14-最长公共前缀)
+- [46. 全排列 @回溯](#46-全排列-回溯)
+- [17. 电话号码的字母组合 @回溯](#17-电话号码的字母组合-回溯)
+- [19. 删除链表的倒数第 N 个结点 @快慢指针](#19-删除链表的倒数第-n-个结点-快慢指针)
+- [20. 有效的括号](#20-有效的括号)
 
 <!-- /TOC -->
-#### 1. 两数之和
+#### 1. 两数之和 @哈希
 
 [题目链接](https://leetcode-cn.com/problems/two-sum/)
 
@@ -29,14 +33,14 @@
 class Solution {
     public int[] twoSum(int[] nums, int target) {
         Map<Integer, Integer> map = new HashMap<>();
-        // 将所有值存入哈系表
+        // 将所有值存入哈希表
         for(int i = 0; i < nums.length; i++) {
             map.put(nums[i], i);
         }
         // 遍历数组寻找 twoSum
         for(int i = 0; i < nums.length; i++) {
             int other = target - nums[i];
-            // 哈系表中有 other 且不是 nums[i] 本身
+            // 哈希表中有 other 且不是 nums[i] 本身
             if(map.containsKey(other) && map.get(other) != i) {
                 return new int[] {i, map.get(other)};
             }
@@ -108,6 +112,8 @@ class Solution {
             int leftVal = nums[left], rightVal = nums[right];
             if(sum == target) {
                 // Arrays.asList(T... a) 泛型
+                // res.add() 中只有 new ArrayList 才行
+                // 因为上面遍历 tuples 元素需要调用 add()
                 res.add(new ArrayList<>(Arrays.asList(nums[left], nums[right])));
                 // 为了保证结果不重复，同一个数只能用一次
                 while(left < right && nums[left] == leftVal)    left++;
@@ -618,6 +624,177 @@ class Solution {
 }
 ```
 
+#### 46. 全排列 @回溯
+
+[题目链接](https://leetcode-cn.com/problems/permutations/)
+
+```
+输入: [1,2,3]
+输出:
+[
+  [1,2,3],
+  [1,3,2],
+  [2,1,3],
+  [2,3,1],
+  [3,1,2],
+  [3,2,1]
+]
+```
+
+```java
+class Solution {
+
+    List<List<Integer>> res = new LinkedList<>();
+    public List<List<Integer>> permute(int[] nums) {
+        // 回溯：路径、选择列表、结束条件
+        LinkedList<Integer> track = new LinkedList<>();
+        backtrack(track, nums);
+        return res;
+    }
+
+    public void backtrack(LinkedList<Integer> track, int[] nums) {
+        // 结束条件
+        if(track.size() == nums.length) {
+            res.add(new LinkedList(track));
+            return;
+        }
+
+        for(int i = 0; i < nums.length; i++) {
+            // for 选择 in 选择列表:
+            if(track.contains(nums[i]))     continue; 
+
+            track.add(nums[i]); // 做选择
+            backtrack(track, nums); // backtrack
+            track.removeLast(); // 撤销选择
+        }
+    }
+}
+```
+
+#### 17. 电话号码的字母组合 @回溯
+
+[题目链接](https://leetcode-cn.com/problems/letter-combinations-of-a-phone-number/)
+
+```
+输入：digits = "23"
+输出：["ad","ae","af","bd","be","bf","cd","ce","cf"]
+```
+
+```java
+class Solution {
+    // 路径、选择列表、结束条件
+    List<String> res = new LinkedList<>();
+    Map<Character, String> map = new HashMap<>();
+    public List<String> letterCombinations(String digits) {
+        if(digits.length() == 0)    return res;
+        // 构建哈系表 
+        map.put('2', "abc");
+        map.put('3', "def");
+        map.put('4', "ghi");
+        map.put('5', "jkl");
+        map.put('6', "mno");
+        map.put('7', "pqrs");
+        map.put('8', "tuv");
+        map.put('9', "wxyz");
+
+        StringBuilder track = new StringBuilder(); 
+        backtrack(track, 0, digits); 
+        return res;
+    }
+    
+    // 路径：track 
+    // 选择列表：map.get(digits.charAt(start))
+    public void backtrack(StringBuilder track, int start, String digits) {
+        // 结束条件
+        if(start == digits.length()) {
+            res.add(track.toString());
+            return;
+        }
+
+        char digit = digits.charAt(start);
+        String s = map.get(digit);
+        // for 选择 in 选择列表 
+        for(int i = 0; i < s.length(); i++) {
+            track.append(s.charAt(i));
+            backtrack(track, start + 1, digits);
+            track.deleteCharAt(start);
+        }
+        
+    }
+}
+```
+
+#### 19. 删除链表的倒数第 N 个结点 @快慢指针
+
+```
+输入：head = [1,2,3,4,5], n = 2
+输出：[1,2,3,5]
+```
+
+删除头节点时需要单独考虑，尾节点不用
+
+```java
+class Solution {
+    public ListNode removeNthFromEnd(ListNode head, int n) {
+        // 边界条件： 链表不为 null 且 1 < n < list.size()
+        ListNode slow = head, fast = head;
+        // fast 先向前 n 个节点
+        for(int i = 0; i < n; i++) {
+            fast = fast.next;
+        }
+        // 删除头节点
+        if(fast == null)    return slow.next;
+
+        // fast 和 slow 同时前进
+        // fast 指向最后一个节点时，slow 指向倒数第 n+1 个节点
+        while(fast != null && fast.next != null) {
+            slow = slow.next;
+            fast = fast.next;
+        }
+
+        slow.next = slow.next.next;
+        return head;
+    }
+}
+```
+
+#### 20. 有效的括号
+
+[题目链接](https://leetcode-cn.com/problems/valid-parentheses/)
+
+```
+输入：s = "()[]{}"
+输出：true
+```
+
+```java
+class Solution {
+    public boolean isValid(String s) {
+        // 哈希表存储对应的括号
+        // 用栈存储左括号
+        // 返回 true 的情况：
+        // 左右括号完全匹配 && 栈最终为空
+        Deque<Character> stack = new LinkedList<>();
+        Map<Character, Character> map = new HashMap<>();
+        map.put('(', ')');
+        map.put('[', ']');
+        map.put('{', '}');
+        for(int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if(map.containsKey(c)) {
+                stack.push(map.get(c));
+            } else {
+                if(stack.isEmpty() || c != stack.peek()) {
+                    return false;
+                }
+                stack.pop();
+            }
+            
+        }
+        return stack.isEmpty();
+    }
+}
+```
 Todo:
 
 第 4 题解法 3 梳理

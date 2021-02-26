@@ -17,6 +17,9 @@
 - [17. 电话号码的字母组合 @回溯](#17-电话号码的字母组合-回溯)
 - [19. 删除链表的倒数第 N 个结点 @快慢指针](#19-删除链表的倒数第-n-个结点-快慢指针)
 - [20. 有效的括号](#20-有效的括号)
+- [21. 合并两个有序链表](#21-合并两个有序链表)
+- [22. 括号生成 @回溯](#22-括号生成-回溯)
+- [23. 合并 K 个升序链表](#23-合并-k-个升序链表)
 
 <!-- /TOC -->
 #### 1. 两数之和 @哈希
@@ -795,6 +798,179 @@ class Solution {
     }
 }
 ```
+
+#### 21. 合并两个有序链表
+
+[题目链接](https://leetcode-cn.com/problems/merge-two-sorted-lists/)
+
+```
+输入：l1 = [1,2,4], l2 = [1,3,4]
+输出：[1,1,2,3,4,4]
+```
+
+```java
+class Solution {
+    public ListNode mergeTwoLists(ListNode l1, ListNode l2) {
+        // 哨兵节点
+        ListNode head = new ListNode(0);
+        ListNode curr = head;
+        // 两个链表都不空时比较节点的值并且后移
+        while(l1 != null && l2 != null) {
+            if(l1.val < l2.val) {
+                curr.next = l1;
+                l1 = l1.next;
+                curr = curr.next;
+            } else {
+                curr.next = l2;
+                l2 = l2.next;
+                curr = curr.next;
+            }
+        }
+        // 不空的那个链表接在后面即可
+        if(l1 != null)  curr.next = l1;
+        if(l2 != null)  curr.next = l2;
+        return head.next;
+    }
+}
+```
+
+#### 22. 括号生成 @回溯
+
+```
+输入：n = 3
+输出：["((()))","(()())","(())()","()(())","()()()"]
+```
+
+```java
+class Solution {
+    List<String> res = new ArrayList<>();
+    public List<String> generateParenthesis(int n) {
+        StringBuilder track = new StringBuilder();
+        backtrack(track, 0, 0, n);
+        return res;
+    }
+
+    public void backtrack(StringBuilder track, int left, int right, int n) {
+        // 结束条件
+        if(track.length() == n * 2) {
+            res.add(track.toString());
+            return;
+        }
+        // for 选择 in 选择列表 
+        // 这里的选择只有两个：添加左括号或右括号
+        // 添加左括号条件：左括号数量 < n
+        // 添加右括号条件：右括号数量 < 左括号数量
+        if(left < n) {
+            track.append('(');
+            backtrack(track, left + 1, right, n);
+            track.deleteCharAt(track.length() - 1);
+        }
+        if(right < left) {
+            track.append(')');
+            backtrack(track, left, right + 1, n);
+            track.deleteCharAt(track.length() - 1);
+        }
+    }
+}
+```
+
+#### 23. 合并 K 个升序链表
+
+[题目链接](https://leetcode-cn.com/problems/merge-k-sorted-lists/)
+
+```
+输入：lists = [[1,4,5],[1,3,4],[2,6]]
+输出：[1,1,2,3,4,4,5,6]
+解释：链表数组如下：
+[
+  1->4->5,
+  1->3->4,
+  2->6
+]
+将它们合并到一个有序链表中得到。
+1->1->2->3->4->4->5->6
+```
+
+```java
+class Solution {
+    public ListNode mergeKLists(ListNode[] lists) {
+        // 布尔数组统计链表是否为空
+        // isValid 标志是否所有链表都空
+        // 比较非空链表的值并后移  min idx
+        ListNode head = new ListNode(0);
+        ListNode curr = head;
+        int length = lists.length;
+        // 初始条件下链表的状态
+        boolean[] valid = new boolean[length];
+        boolean isValid = false;
+        for(int i = 0; i < length; i++) {
+            if(lists[i] == null)    valid[i] = false;
+            else    valid[i] = true;
+        }
+        isValid = validCount(valid);
+
+        while(isValid) {
+            int min = Integer.MAX_VALUE;
+            int idx = -1;
+            for(int i = 0; i < length; i++) {
+                if(valid[i]) { // 该链表不空
+                    if(lists[i].val < min) {
+                        min = lists[i].val;
+                        idx = i;
+                    }
+                }
+            }
+            curr.next = lists[idx];
+            curr = curr.next;
+            lists[idx] = lists[idx].next;
+            valid[idx] = lists[idx] != null;
+
+            isValid = validCount(valid);
+        }
+        return head.next;
+    }
+
+    public boolean validCount(boolean[] valid) {
+        for(int i = 0; i < valid.length; i++) {
+            // 有一个 true 就继续合并
+            if(valid[i])    return true;
+        }
+        return false;
+    } 
+}
+```
+
+```java
+class Solution {
+    public ListNode mergeKLists(ListNode[] lists) {
+        // 使用优先队列存储链表的所有值，然后组成链表
+        Queue<ListNode> queue = new PriorityQueue<>(            
+            new Comparator<ListNode>() {
+                @Override
+                public int compare(ListNode l1, ListNode l2) {
+                    return l1.val - l2.val;
+                }
+            });
+        // Queue<ListNode> q = new PriorityQueue<>((x,y)->x.val-y.val);
+
+        for(ListNode list : lists) {
+            if(list != null)    queue.offer(list);
+        }
+
+        ListNode head = new ListNode(0);
+        ListNode curr = head;
+        while(!queue.isEmpty()) {
+            curr.next = queue.poll();
+            curr = curr.next;
+            if(curr.next != null) {
+                queue.offer(curr.next);
+            }
+        }
+        return head.next;
+    }
+}
+```
+
 Todo:
 
 第 4 题解法 3 梳理

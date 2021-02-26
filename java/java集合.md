@@ -54,7 +54,7 @@ static class SynchronizedList<E> extends SynchronizedCollection<E> implements Li
 
 `List arrayList = new CopyOnWriteArrayList<>();`
 
-原理：**读写分离，写上锁，写完复制**
+原理：**读写分离，写上锁，写完修改数组引用**
 
 写操作在一个复制的数组上进行，读操作还是在原始数组中进行，读写分离，互不影响。写操作需要加锁，防止并发写入时导致写入数据丢失。写操作结束之后需要把原始数组指向新的复制数组。
 
@@ -125,13 +125,13 @@ static final int hash(Object key) {
 
 JDK1.7 map.put(key, value) 流程：
 
-1）计算 key hash 值 
+1）计算 key 的 hashCode 经过扰动函数得到 hash 值
 
 h = key.hashCode() 
 
 hash = (h >>> 20) ^ (h >>> 12) ^  (h >>> 7) ^ (h >>> 4)
 
-2）计算节点放的位置 —— hash & (n - 1)
+2）hash 值与哈希表长度 -1 做与运算得到节点存放位置 —— hash & (n - 1)
 
 3）判断当前位置 hashCode() （和 equals()）结果，相同时覆盖，不同时拉链法解决冲突（头插法）
 
@@ -141,15 +141,15 @@ hash = (h >>> 20) ^ (h >>> 12) ^  (h >>> 7) ^ (h >>> 4)
 
 JDK1.8 map.put(key, value) 流程
 
-1）计算 key hash 值
+1）计算 key 的 hashCode 经过扰动函数得到 hash 值
 
 hash = (key == null) ? 0 : (h = key.hashCode()) ^ (h >>> 16)
 
 > 异或 h>>>16 是为了让 hash 值的高 16 位也参与运算，**减少碰撞，数据分配均匀**。因为后面计算节点位置相与时高 16 位不参与计算。
 
-2）计算节点放的位置 —— hash & (n - 1)
+2）hash 值与哈希表长度 -1 做与运算得到节点存放位置 —— hash & (n - 1)
 
-3）判断当前位置 hashCode() （和 equals()）结果，相同时覆盖，不同时拉链法（尾插法）或红黑树解决冲突
+3）判断当前位置 hashCode() （和 equals()）结果，相同时覆盖，不同时拉链法（尾插法）或红黑树解决冲突）
 
 ![JDK1.8 put 流程](https://camo.githubusercontent.com/6e61b336220f0690540fad2acc0d8c19106a32b278768582cb3e973a25a061b6/68747470733a2f2f6d792d626c6f672d746f2d7573652e6f73732d636e2d6265696a696e672e616c6979756e63732e636f6d2f323031392d372f7075742545362539362542392545362542332539352e706e67)
 
@@ -176,17 +176,92 @@ static final int tableSizeFor(int cap) {
 
 ### HashMap 多线程操作导致死循环问题
 
-主要原因在于并发下的 Rehash 会造成元素之间会形成一个循环链表。
+并发下的 Rehash 会造成元素之间会形成一个循环链表。
 
 详情请查看：https://coolshell.cn/articles/9606.html
 
 ### HashMap 和 Hashtable 的区别?
 
+- 线程安全、效率
 
+HashMap 线程不安全，HashTable 线程安全（内部方法使用 `synchronized`）
+
+- NULL 值
+
+ HashMap 可以存储 null 的 key 和 value，HashTable 不允许有 null 键和 null 值（抛出 NullPointerException）
+
+- 迭代器
+
+HashMap 使用 Iterator 迭代器，HashTable 使用 Enumerator 迭代器
+
+- hash 值的计算
+
+HahMap 将 key 的 hashCode() 和高 16 位异或，HashTable 直接使用 key 的 hashCode()
+
+- 初始大小和扩容方式
+
+HashMap 默认数组大小 16 且是懒加载机制，HashTable 默认数组大小 11
+
+HahsMap 扩容大小为 2n，HashTable 为 2n+1
+
+### HashMap 和 HashSet 的区别？
+
+|          |          HashMap          |               HashSet                |
+| :------: | :-----------------------: | :----------------------------------: |
+| 实现接口 |         Map 接口          |               Set 接口               |
+| 存储内容 |          键值对           |                 对象                 |
+| 添加方法 |      put(key, value)      |                add(e)                |
+| 对象比较 | 使用 key 计算 hash 值比较 | 使用 hashCode() 和 equals() 方法比较 |
+
+### HashMap 和 TreeMap 区别？
+
+TreeMap 主要多了对集合中的元素 `根据键排序的能力` 以及对集合内元素的`搜索的能力` 
+
+[HashMap 和 TreeMap 区别](https://github.com/Snailclimb/JavaGuide/blob/master/docs/java/collection/Java%E9%9B%86%E5%90%88%E6%A1%86%E6%9E%B6%E5%B8%B8%E8%A7%81%E9%9D%A2%E8%AF%95%E9%A2%98.md#143-hashmap-%E5%92%8C-treemap-%E5%8C%BA%E5%88%AB)
+
+### ConcurrentHashMap 线程安全的具体实现方式/底层具体实现？
+
+**JDK1.7**
+
+Segment 数组 + HashEntry 数组 + 链表；分段锁
+
+ConcurrentHashMap 采用分段锁的方式，对整个桶数组进行了分割分段，分出很多 Segment，每个锁维护一个 Segment，这样操作不同的 Segment 的时候就互不影响，提高并发效率。
+
+ConcurrentHashMap 是由 Segment 数组结构和 HashEntry 数组结构组成，Segment 实现了 ReentrantLock，HashEntry 用于存储键值对数据。
+
+![jdk1.7 ConcurrentHashMap](https://camo.githubusercontent.com/5ac8db8f7ce3819adc3865ee5dc1232fb596471d7bfd3059445f5b0c75bc4d07/68747470733a2f2f6d792d626c6f672d746f2d7573652e6f73732d636e2d6265696a696e672e616c6979756e63732e636f6d2f323031392d362f436f6e63757272656e74486173684d61702545352538382538362545362541452542352545392539342538312e6a7067)
+
+**JDK1.8**
+
+Node 数组 + 链表 / 红黑树；CAS 和 synchronized
+
+synchronized 锁粒度更低，优化空间更大（？）
+
+在大量数据操作情况下，ReentrantLock 内存开销更大
+
+![jdk1.8 ConcurrentHashMap](https://github.com/Snailclimb/JavaGuide/raw/master/docs/java/collection/images/java8_concurrenthashmap.png)
+
+
+
+### ConcurrentHashMap 和 Hashtable 的区别？
+
+**JDK1.7**
+
+- 底层实现 ——> 执行效率
+
+ConcurrentHashMap 是 Segment 数组 + HashEntry 数组 + 链表；HashTable 是和 HashMap 一样的 数组 + 链表结构。
+
+ConcurrentHashMap 采用分段锁的方式分出多个 Segment，每个 Segment 之间互不影响，和 HashTable 这种通过 synchronized 实现全局锁的方式相比，并发效率更高。
+
+**JDK1.8**
+
+- 底层实现
+
+ConcurrentHashMap 使用 Node 数组+链表+红黑树的数据结构来实现，并发控制使用 synchronized 和 CAS 来操作。
 
 [Java集合框架常见面试题](https://github.com/Snailclimb/JavaGuide/blob/master/docs/java/collection/Java%E9%9B%86%E5%90%88%E6%A1%86%E6%9E%B6%E5%B8%B8%E8%A7%81%E9%9D%A2%E8%AF%95%E9%A2%98.md)
 
-https://github.com/CyC2018/CS-Notes/blob/master/notes/Java%20%E5%AE%B9%E5%99%A8.md#hashmap
+
 
 
 

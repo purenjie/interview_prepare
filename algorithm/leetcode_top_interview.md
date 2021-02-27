@@ -518,7 +518,8 @@ class Solution {
 ```
 
 - 解法二：“自底向上”的迭代解法（dp 数组）
-- 
+
+Todo
 
 #### 11. 盛最多水的容器
 
@@ -858,8 +859,8 @@ class Solution {
         }
         // for 选择 in 选择列表 
         // 这里的选择只有两个：添加左括号或右括号
-        // 添加左括号条件：左括号数量 < n
-        // 添加右括号条件：右括号数量 < 左括号数量
+        // 添加左括号前提：左括号数量 < n
+        // 添加右括号前提：右括号数量 < 左括号数量
         if(left < n) {
             track.append('(');
             backtrack(track, left + 1, right, n);
@@ -970,6 +971,132 @@ class Solution {
     }
 }
 ```
+
+#### 78. 子集 @回溯
+
+[题目链接](https://leetcode-cn.com/problems/subsets/)
+
+```
+输入：nums = [1,2,3]
+输出：[[],[1],[2],[1,2],[3],[1,3],[2,3],[1,2,3]]
+```
+
+```java
+class Solution {
+    public List<List<Integer>> res = new LinkedList<>();
+    public List<List<Integer>> subsets(int[] nums) {
+        LinkedList<Integer> track = new LinkedList<>();
+        backtrack(track, 0, nums);
+        return res;
+    }
+    // 路径：track 
+    // 选择列表：nums[start:]
+    public void backtrack(LinkedList<Integer> track, int start, int[] nums) {
+        // 结束条件
+        res.add(new LinkedList(track));
+        // for 选择 in 选择列表
+        // start 只用在开头控制递归
+        for(int i = start; i < nums.length; i++) { 
+            track.add(nums[i]);
+            backtrack(track, i + 1, nums);
+            track.removeLast();
+        }
+    }
+}
+```
+
+#### 26. 删除排序数组中的重复项
+
+[题目链接](https://leetcode-cn.com/problems/remove-duplicates-from-sorted-array/)
+
+要尽量避免在中间删除元素，想办法把元素放到最后，删除的时间复杂度变成 O(1)
+
+```
+给定数组 nums = [1,1,2], 
+函数应该返回新的长度 2, 并且原数组 nums 的前两个元素被修改为 1, 2。 
+你不需要考虑数组中超出新长度后面的元素。
+```
+
+```java
+class Solution {
+    public int removeDuplicates(int[] nums) {
+        // 快慢指针
+        if(nums.length == 0)    return 0;
+        int slow = 0, fast = 1;
+        for(; fast < nums.length; fast++) {
+            if(nums[slow] != nums[fast]) {
+                slow++;
+                nums[slow] = nums[fast];
+            }
+        }
+        return slow + 1;
+    }
+}
+```
+
+#### 28. 实现 strStr ()
+
+[题目链接](https://leetcode-cn.com/problems/implement-strstr/)
+
+```
+输入: haystack = "hello", needle = "ll"
+输出: 2
+```
+
+```java
+class Solution {
+    public int strStr(String haystack, String needle) {
+        // 字符串匹配问题
+        // 双指针遍历两个数组
+        if(haystack == null || needle == null)  return -1;
+        int h = haystack.length(), n = needle.length();
+        if(n == 0)  return 0;
+        for(int i = 0; i < h - n + 1; i++) {
+            for(int j = 0; j < n; j++) {
+                if(haystack.charAt(i + j) != needle.charAt(j))  break;
+                if(j + 1 == n)  return i;
+            }
+        }
+        return -1;
+    }
+}
+```
+
+另解：KMP 算法
+
+#### 29. 两数相除
+
+[题目链接](https://leetcode-cn.com/problems/divide-two-integers/)
+
+```
+输入: dividend = 10, divisor = 3
+输出: 3
+解释: 10/3 = truncate(3.33333..) = truncate(3) = 3
+```
+
+```java
+class Solution {
+    public int divide(int dividend, int divisor) {
+        if(dividend == 0)   return 0;
+        // 边界溢出
+        if(dividend == Integer.MAX_VALUE && divisor == -1)  return Integer.MAX_VALUE; 
+        // 判断正负
+        boolean symbol = (dividend ^ divisor) > 0; 
+        long dividendL = Math.abs((long)dividend);
+        long divisorL = Math.abs((long)divisor);
+        int result = 0;
+        for(int i = 31; i >= 0; i--) {
+            if((dividendL >> i) >= divisorL) { // divisorL * 2^i <= dividendL
+                result += 1 << i;
+                dividendL -= divisorL >> i;
+            }
+        }
+        return symbol ? result : -result;
+    }
+}
+```
+
+
 
 Todo:
 

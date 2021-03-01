@@ -20,6 +20,10 @@
 - [21. 合并两个有序链表](#21-合并两个有序链表)
 - [22. 括号生成 @回溯](#22-括号生成-回溯)
 - [23. 合并 K 个升序链表](#23-合并-k-个升序链表)
+- [78. 子集 @回溯](#78-子集-回溯)
+- [26. 删除排序数组中的重复项](#26-删除排序数组中的重复项)
+- [28. 实现 strStr ()](#28-实现-strstr-)
+- [29. 两数相除](#29-两数相除)
 
 <!-- /TOC -->
 #### 1. 两数之和 @哈希
@@ -1021,6 +1025,8 @@ class Solution {
 class Solution {
     public int removeDuplicates(int[] nums) {
         // 快慢指针
+        // slow 指向当前最后一个不重复的数
+        // nums[slow] != nums[fast] 时 nums[++slow] = nums[fast];
         if(nums.length == 0)    return 0;
         int slow = 0, fast = 1;
         for(; fast < nums.length; fast++) {
@@ -1048,6 +1054,7 @@ class Solution {
     public int strStr(String haystack, String needle) {
         // 字符串匹配问题
         // 双指针遍历两个数组
+        // if(haystack.charAt(i + j) != needle.charAt(j))  break;
         if(haystack == null || needle == null)  return -1;
         int h = haystack.length(), n = needle.length();
         if(n == 0)  return 0;
@@ -1076,22 +1083,156 @@ class Solution {
 
 ```java
 class Solution {
+    // dividendL 右移减小
+    // result 左移增大
+    // dividendL - (divisorL << i) [10 - 3*3]
+    // 转换为 long 是为了处理 dividend == Integer.MIN_VALUE
     public int divide(int dividend, int divisor) {
         if(dividend == 0)   return 0;
         // 边界溢出
-        if(dividend == Integer.MAX_VALUE && divisor == -1)  return Integer.MAX_VALUE; 
+        if(dividend == Integer.MIN_VALUE && divisor == -1)  return Integer.MAX_VALUE; 
         // 判断正负
-        boolean symbol = (dividend ^ divisor) > 0; 
+        boolean sign = (dividend ^ divisor) >= 0; // 1 ^ 1 = 0
         long dividendL = Math.abs((long)dividend);
         long divisorL = Math.abs((long)divisor);
         int result = 0;
         for(int i = 31; i >= 0; i--) {
             if((dividendL >> i) >= divisorL) { // divisorL * 2^i <= dividendL
                 result += 1 << i;
-                dividendL -= divisorL >> i;
+                dividendL -= divisorL << i;
             }
         }
-        return symbol ? result : -result;
+        return sign ? result : -result;
+    }
+}
+```
+
+#### 33. 搜索旋转排序数组 @二分查找
+
+[题目链接](https://leetcode-cn.com/problems/search-in-rotated-sorted-array/)
+
+```
+输入：nums = [4,5,6,7,0,1,2], target = 0
+输出：4
+```
+
+```java
+class Solution {
+    public int search(int[] nums, int target) {
+        int left = 0, right = nums.length - 1;
+        while(left <= right) {
+            int mid = left + (right - left) / 2;
+            if(nums[mid] == target) {
+                return mid;
+            } 
+            if(nums[left] <= nums[mid]) { // 前半部分有序 切记 <= 
+                if(nums[left] <= target && nums[mid] > target) { // nums[left] <= target < nums[mid]
+                    right = mid - 1;
+                } else {
+                    left = mid + 1;
+                }
+            } else { // 后半部分有序
+                if(nums[mid] < target && nums[right] >= target) { // nums[mid] < target <= nums[right]
+                    left = mid + 1;
+                } else {
+                    right = mid - 1;
+                }
+            }
+        }
+        return -1;
+    }
+}
+```
+
+#### 34. 在排序数组中查找元素的第一个和最后一个位置 @二分查找
+
+[题目链接](https://leetcode-cn.com/problems/find-first-and-last-position-of-element-in-sorted-array/)
+
+```
+输入：nums = [5,7,7,8,8,10], target = 8
+输出：[3,4]
+```
+
+```java
+class Solution {
+    public int[] searchRange(int[] nums, int target) {
+        int[] res = new int[] {-1, -1};
+        if(nums.length == 0)    return res;
+        int left = 0, right = nums.length - 1;
+        // 第一个位置（即左侧边界）
+        while(left <= right) {
+            int mid = left + (right - left) / 2;
+            if(nums[mid] > target)  right = mid - 1;
+            else if(nums[mid] < target)     left = mid + 1;
+            else if(nums[mid] == target)    right = mid - 1;
+        }
+        // right 指向小于 target 的最大值，left 指向大于等于 target 的最小值
+        // 左侧边界用 left，右侧边界用 right
+        if(left >= nums.length || nums[left] != target)  return res;
+        res[0] = left;
+        for(int i = left; i < nums.length; i++) {
+            if(nums[i] == target)  res[1] = i;
+            else break;
+        }
+        return res;
+    }
+}
+```
+
+#### 36. 有效的数独
+
+[题目链接](https://leetcode-cn.com/problems/valid-sudoku/)
+
+```
+输入:
+[
+  ["5","3",".",".","7",".",".",".","."],
+  ["6",".",".","1","9","5",".",".","."],
+  [".","9","8",".",".",".",".","6","."],
+  ["8",".",".",".","6",".",".",".","3"],
+  ["4",".",".","8",".","3",".",".","1"],
+  ["7",".",".",".","2",".",".",".","6"],
+  [".","6",".",".",".",".","2","8","."],
+  [".",".",".","4","1","9",".",".","5"],
+  [".",".",".",".","8",".",".","7","9"]
+]
+输出: true
+```
+
+根据题目的规则
+
+1. 数字 `1-9` 在每一行只能出现一次。
+2. 数字 `1-9` 在每一列只能出现一次。
+3. 数字 `1-9` 在每一个以粗实线分隔的 `3x3` 宫内只能出现一次。
+
+每一行、每一列、每个 Box 记录数字出现的次数，不符合条件时返回 false，最后返回 true
+
+```java
+class Solution {
+    public boolean isValidSudoku(char[][] board) {
+        // Java boolean 默认 false
+        boolean[][] row = new boolean[9][9];
+        boolean[][] col = new boolean[9][9];
+        boolean[][] box = new boolean[9][9];
+
+        for(int i = 0; i < 9; i++) {
+            for(int j = 0; j < 9; j++) {
+                if(board[i][j] == '.')  continue;
+                int num = board[i][j] - '1';
+                if(row[i][num])     return false;
+                if(col[j][num])     return false;
+                // idx = 行数 × 3 + 列数
+                // 3 × 3 的九宫格
+                // 行数 = i / 3；列数 = j / 3
+                int boxIdx = j / 3 + (i / 3) * 3; 
+                if(box[boxIdx][num])    return false;
+                // 修改对应行、列、box 的值
+                row[i][num] = true;
+                col[j][num] = true;
+                box[boxIdx][num] = true;
+            }
+        }
+        return true;
     }
 }
 ```

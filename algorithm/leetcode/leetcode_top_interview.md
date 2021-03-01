@@ -1116,6 +1116,8 @@ class Solution {
 输出：4
 ```
 
+旋转数组的思路为 `判断有序的那一部分`，由于不确定 target 和有序数组的关系，所以需要进一步判断 target 是否在有序数组内。
+
 ```java
 class Solution {
     public int search(int[] nums, int target) {
@@ -1178,6 +1180,38 @@ class Solution {
     }
 }
 ```
+
+#### 69. x 的平方根 @二分查找
+
+[题目链接](https://leetcode-cn.com/problems/sqrtx/)
+
+```
+输入: 8
+输出: 2
+说明: 8 的平方根是 2.82842..., 
+     由于返回类型是整数，小数部分将被舍去。
+```
+
+```java
+class Solution {
+    public int mySqrt(int x) {
+        // 采用二分查找 0 <= k <= x
+        // right <= k < left
+        // 所以 return right
+        int left = 0, right = x;
+        while(left <= right) {
+            int mid = left + (right - left) / 2;
+            long square = (long)mid * mid; // 注意刚开始 (x/2) 的平方可能会溢出
+            if(square == x)     return mid;
+            else if(square > x) right = mid - 1;
+            else if(square < x) left = mid + 1;
+        }  
+        return right;
+    }
+}
+```
+
+
 
 #### 36. 有效的数独
 

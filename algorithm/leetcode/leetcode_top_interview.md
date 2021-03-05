@@ -1486,10 +1486,99 @@ class Solution {
 }
 ```
 
+#### 48. 旋转图像
 
+[题目链接](https://leetcode-cn.com/problems/rotate-image/)
 
-Todo:
+- 解法一：辅助数组
 
-第 4 题解法 3 梳理
+翻转规律 `matrix[row][col] -> matrix[col][n-row-1]`
 
-回文字串/子序列关联及解法
+- 翻转替代旋转
+
+```java
+class Solution {
+    public void rotate(int[][] matrix) {
+        int n = matrix.length;
+        // 水平翻转 row 0-> n/2
+        // matrix[row][col] -> matrix[n-row-1][col]
+        for(int i = 0; i < n / 2; i++) {
+            for(int j = 0; j < n; j++) {
+                int tmp = matrix[n - i - 1][j];
+                matrix[n - i - 1][j] = matrix[i][j];
+                matrix[i][j] = tmp;
+            }
+        }
+        // 对角线翻转 col 0->row
+        // matrix[row][col] -> matrix[col][row]
+        for(int i = 0; i < n; i++) {
+            for(int j = 0; j < i; j++) {
+                int tmp = matrix[j][i];
+                matrix[j][i] = matrix[i][j];
+                matrix[i][j] = tmp;
+            }
+        }
+    }
+}
+```
+
+#### 49. 字母异位词分组
+
+[题目链接](https://leetcode-cn.com/problems/group-anagrams/)
+
+- 解法一：对字符串进行排序，用哈希表存储
+
+```java
+class Solution {
+    public List<List<String>> groupAnagrams(String[] strs) {
+        // 对字符串进行排序
+        ArrayList<List<String>> res = new ArrayList<>();
+        if(strs == null)    return res;
+
+        Map<String, List<String>> map = new HashMap<>();
+        for(String s : strs) {
+            char[] arr = s.toCharArray();
+            Arrays.sort(arr);
+            String key = new String(arr);
+            List<String> list = map.getOrDefault(key, new ArrayList<String>());
+            list.add(s);
+            map.put(key, list);
+        }
+        res.addAll(map.values());
+        return res;
+    }
+}
+```
+
+> 注：不能使用 char[] 作为 key，计算哈希值的时候用的是内存地址而不是根据内容
+
+- 解法二：计数
+
+```java
+class Solution {
+    public List<List<String>> groupAnagrams(String[] strs) {
+        // 对字符进行计数，key 为 26 个字符出现次数的拼接
+        ArrayList<List<String>> res = new ArrayList<>();
+        if(strs == null)    return res;
+
+        Map<String, List<String>> map = new HashMap<>();
+        for(String s : strs) {
+            int[] arr = new int[26];
+            Arrays.fill(arr, 0);
+            for(int i = 0; i < s.length(); i++) {
+                arr[s.charAt(i) - 'a']++;
+            }
+            String key = Arrays.toString(arr);
+            List<String> list = map.getOrDefault(key, new ArrayList<String>());
+            list.add(s);
+            map.put(key, list);
+        }
+        res.addAll(map.values());
+        return res;
+    }
+}
+```
+
+> Arrays.toString()：数组 -> String
+
+44、48、49

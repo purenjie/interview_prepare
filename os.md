@@ -84,7 +84,7 @@
 
 可用于不同机器之间的进程通信，通过套接字中的相关函数来完成通信过程。
 
-![Socket 连接](http://gitbook.net/uploads/allimg/130817/0JI15624-0.gif)
+![Socket 连接](https://img-blog.csdn.net/20151218101102971?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQv/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/Center)
 
   ### 线程间的同步的方式有哪些
 

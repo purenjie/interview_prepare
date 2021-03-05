@@ -28,6 +28,10 @@
 - [34. 在排序数组中查找元素的第一个和最后一个位置 @二分查找](#34-在排序数组中查找元素的第一个和最后一个位置-二分查找)
 - [69. x 的平方根 @二分查找](#69-x-的平方根-二分查找)
 - [36. 有效的数独](#36-有效的数独)
+- [38. 外观数列](#38-外观数列)
+- [41. 缺失的第一个正数 #Hard](#41-缺失的第一个正数-hard)
+- [42. 接雨水](#42-接雨水)
+- [44. 通配符匹配](#44-通配符匹配)
 
 <!-- /TOC -->
 #### 1. 两数之和 @哈希
@@ -1271,6 +1275,213 @@ class Solution {
             }
         }
         return true;
+    }
+}
+```
+
+#### 38. 外观数列
+
+[题目链接](https://leetcode-cn.com/problems/count-and-say/)
+
+```java
+class Solution {
+    // 迭代
+    // 计算出前第 n-1 个的答案
+    // 按照规则计算第 n 个
+    public String countAndSay(int n) {
+        String res = "1";
+        for(int i = 2; i <= n; i++) {
+            StringBuilder sb = new StringBuilder();
+            int count = 1;
+            for(int j = 0; j < res.length(); j++) { 
+                while(j + 1 < res.length() && res.charAt(j) == res.charAt(j + 1)) {
+                    count++;
+                    j++;
+                }
+                sb.append(count).append(res.charAt(j));
+                count = 1; 
+            }
+            res = sb.toString();
+        }
+        return res;
+    }
+}
+```
+
+#### 41. 缺失的第一个正数 #Hard
+
+[题目链接](https://leetcode-cn.com/problems/first-missing-positive/)
+
+```
+输入：nums = [1,2,0]
+输出：3
+```
+
+- 解法一：Set
+- 解法二：原地哈希（利用数组的索引）
+
+```java
+class Solution {
+    public int firstMissingPositive(int[] nums) {
+        int n = nums.length;
+        // 负数和 0 转换为 n+1
+        for(int i = 0; i < n; i++) {
+            if(nums[i] <= 0)    nums[i] = n + 1;
+        }
+        // if abs(num) <= nums.length
+        // 将该位置的值变为负数
+        // 因为前面会改变后面的值，所以要用绝对值 ！！！
+        for(int i = 0; i < n; i++) {
+            int num = Math.abs(nums[i]);
+            if(num <= n)    nums[num - 1] = -Math.abs(nums[num - 1]);
+        }
+        for(int i = 0; i < n; i++) {
+            if(nums[i] > 0) return i + 1;
+        }
+        return n + 1;
+    }
+}
+```
+
+- 解法三：置换元素
+
+```
+class Solution {
+    public int firstMissingPositive(int[] nums) {
+        int n = nums.length;
+        // 置换 nums[i] = i + 1 
+        for(int i = 0; i < n; i++) {
+            // 位置 i 上的元素一直交换，直到不符合 while 条件
+            while(nums[i] > 0 && nums[i] <=n && nums[i] != nums[nums[i]-1]) {
+                int tmp = nums[nums[i] - 1];
+                nums[nums[i] - 1] = nums[i];
+                nums[i] = tmp; 
+            }
+        }
+        for(int i = 0; i < n; i++) {
+            if(nums[i] != i + 1)    return i + 1;
+        }
+        return n + 1;
+    }
+}
+```
+
+#### 42. 接雨水
+
+[题目链接](https://leetcode-cn.com/problems/trapping-rain-water/)
+
+```
+输入：height = [0,1,0,2,1,0,1,3,2,1,2,1]
+输出：6
+解释：上面是由数组 [0,1,0,2,1,0,1,3,2,1,2,1] 表示的高度图，在这种情况下，可以接 6 个单位的雨水（蓝色部分表示雨水）。 
+```
+
+题目的意思就是当前列能接的雨水 num = min(lmax, rmax) - height[i]
+
+- 解法一：备忘录存储所有位置的 lmax 和 rmax
+
+```java
+class Solution {
+    public int trap(int[] height) {
+        if(height.length == 0)  return 0;
+        int n = height.length;
+        int res = 0;
+        // 备忘录 
+        // 用两个数组存储 当前位置左右两边的最大值
+        int[] left = new int[n];
+        int[] right = new int[n];
+        left[0] = height[0];
+        right[n - 1] = height[n - 1];
+        for(int i = 1; i < n; i++)  left[i] = Math.max(left[i - 1], height[i]);
+        for(int i = n - 2; i >= 0; i--) right[i] = Math.max(right[i + 1], height[i]);
+
+        for(int i = 1; i < n - 1; i++) {
+            res += Math.min(left[i], right[i]) - height[i];
+        }
+        return res;
+    }
+}
+```
+
+- 解法二：双指针法。lmax < rmax 就左移，反之右移
+
+```java
+class Solution {
+    public int trap(int[] height) {
+        if(height.length == 0)  return 0;
+        int left = 0, right = height.length - 1;
+        int lmax = height[0];
+        int rmax = height[height.length - 1];
+        int res = 0;
+        while(left <= right) {
+            lmax = Math.max(lmax, height[left]);
+            rmax = Math.max(rmax, height[right]);
+            if(lmax < rmax) {
+                res += lmax - height[left];
+                left++;
+            } else {
+                res += rmax - height[right];
+                right--;
+            }
+        }
+        return res;
+    }
+}
+```
+
+#### 44. 通配符匹配
+
+[题目链接](https://leetcode-cn.com/problems/wildcard-matching/)
+
+```
+输入:
+s = "aa"
+p = "*"
+输出: true
+解释: '*' 可以匹配任意字符串。
+```
+
+该题和第 10 题正则表达式类似，比第 10 题简单一些。
+
+- 解法一：递归 +　备忘录
+
+```java
+class Solution {
+    Map<String, Boolean> memo = new HashMap<>();
+    public boolean isMatch(String s, String p) {
+        if(s == null || p == null)  return false;
+        return dp(s, 0, p, 0);
+    }
+
+    // dp(s, i, p, j):s[i:] match p[j:]
+    public boolean dp(String s, int i, String p, int j) {
+        int m = s.length();
+        int n = p.length();
+        // base case
+        if(j == n) return i == m;
+        if(i == m) {
+            if(j == n)  return true;
+            while(j != n) {
+                if(p.charAt(j) != '*')  return false;
+                j++;
+            }
+            return true;
+        }
+        boolean res = true;
+        // choice 
+        String key = i + "," + j;
+        if(memo.containsKey(key))  return memo.get(key);
+        if(p.charAt(j) == '*') {  // 匹配 0 个或多个字符
+            res = dp(s, i, p, j + 1) || dp(s, i + 1, p, j);
+        } else { // 匹配单个字符
+            if(s.charAt(i) == p.charAt(j) || p.charAt(j) == '?') { // 匹配单个字符
+                res = dp(s, i + 1, p, j + 1);
+            } else { // 不匹配
+                res = false;
+            }
+        }
+        memo.put(key, res);
+        return res;
     }
 }
 ```

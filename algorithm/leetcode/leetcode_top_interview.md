@@ -32,6 +32,11 @@
 - [41. 缺失的第一个正数 #Hard](#41-缺失的第一个正数-hard)
 - [42. 接雨水](#42-接雨水)
 - [44. 通配符匹配](#44-通配符匹配)
+- [48. 旋转图像](#48-旋转图像)
+- [49. 字母异位词分组](#49-字母异位词分组)
+- [50. Pow(x, n)](#50-powx-n)
+- [53. 最大子序和](#53-最大子序和)
+- [54. 螺旋矩阵](#54-螺旋矩阵)
 
 <!-- /TOC -->
 #### 1. 两数之和 @哈希
@@ -1581,4 +1586,145 @@ class Solution {
 
 > Arrays.toString()：数组 -> String
 
-44、48、49
+#### 50. Pow(x, n)
+
+[题目链接](https://leetcode-cn.com/problems/powx-n/)
+
+```
+输入：x = 2.00000, n = 10
+输出：1024.00000
+```
+
+- 解法一：快速幂 + 递归
+
+n < 0 时传入 -n，转换为 long 型避免 -n 溢出
+
+```java
+class Solution {
+    public double myPow(double x, int n) {
+        long N = n;
+        // int MIN_VALUE 取负值会溢出
+        return N > 0 ? quickMul(x, N) : 1 / quickMul(x, -N);
+    }
+
+    public double quickMul(double x, long n) {
+        if(n == 0)  return 1.0;
+        double y = quickMul(x, n / 2);
+        return n % 2 == 0 ? y * y : y * y * x;
+    }
+}
+```
+
+- 解法二：快速幂 + 迭代（不是很明白）
+
+```java
+class Solution {
+    public double myPow(double x, int n) {
+        long N = n;
+        return N > 0 ? quickMul(x, N) : 1 / quickMul(x, -N);
+    }
+
+    public double quickMul(double x, long n) {
+        double res = 1;
+        double tmp = x;
+
+        while(n > 0) {
+            if(n % 2 == 1)  res *= tmp;
+            tmp *=  tmp;
+            n /= 2;
+        }
+        return res;
+    }
+}
+```
+
+#### 53. 最大子序和
+
+[题目链接](https://leetcode-cn.com/problems/maximum-subarray/)
+
+```
+输入：nums = [-2,1,-3,4,-1,2,1,-5,4]
+输出：6
+解释：连续子数组 [4,-1,2,1] 的和最大，为 6 。
+```
+
+- 解法一：动态规划
+
+```java
+class Solution {
+    public int maxSubArray(int[] nums) {
+        // dp[i] nums[:i] max sum
+        int[] dp = new int[nums.length];
+        // base case
+        dp[0] = nums[0];
+        int sum = 0;
+        // sum: nums[i] 所在的序列的最大值
+        for(int i = 1; i < nums.length; i++) {
+            sum = Math.max(sum + nums[i], nums[i]);
+            dp[i] = Math.max(dp[i - 1], sum);
+        }
+        return dp[nums.length - 1];
+    }
+}
+```
+
+- 解法二：贪心法
+
+```java
+class Solution {
+    public int maxSubArray(int[] nums) {
+        int curr = 0;
+        int res = nums[0];
+        for(int num : nums) {
+            curr += num;
+            res = Math.max(curr, res);
+            if(curr < 0)    curr = 0;
+        }
+        return res;
+    }
+}
+```
+
+#### 54. 螺旋矩阵
+
+[题目链接](https://leetcode-cn.com/problems/spiral-matrix/)
+
+```
+顺时针旋转
+输入：matrix = [[1,2,3],[4,5,6],[7,8,9]]
+输出：[1,2,3,6,9,8,7,4,5]
+```
+
+找到旋转的规律，然后按照规律来写就可以
+
+右 `matrix[top][left]` -> `matrix[top][right]`
+
+下 `matrix[top][right]` -> `matrix[bottom][right]`
+
+if(left < right && top < bottom) 因为只有一行或一列的话是不会执行左和上的。左上规律同理可得
+
+```java
+class Solution {
+    public List<Integer> spiralOrder(int[][] matrix) {
+        List<Integer> res = new ArrayList<>();
+        if(matrix == null || matrix.length == 0 || matrix[0].length == 0)   return res;
+        int rows = matrix.length, cols = matrix[0].length;
+        int top = 0, bottom = rows - 1;
+        int left = 0, right = cols - 1;
+        while(left <= right && top <= bottom) {
+            for(int i = left; i <= right; i++)  res.add(matrix[top][i]); // 右
+            for(int j = top + 1; j <= bottom; j++)  res.add(matrix[j][right]); // 下
+            if(left < right && top < bottom) {
+                for(int i = right - 1; i >= left; i--)  res.add(matrix[bottom][i]); // 左
+                for(int j = bottom - 1; j >= top + 1; j--)  res.add(matrix[j][left]); // 上
+            }
+            left++;
+            right--;
+            top++;
+            bottom--;
+        }
+        return res;
+    }
+}
+```
+

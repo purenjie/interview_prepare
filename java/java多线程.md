@@ -24,7 +24,10 @@
   - [ThreadLocal 内存泄露问题](#threadlocal-内存泄露问题)
 - [线程池](#线程池)
   - [为什么要用线程池（好处）？](#为什么要用线程池好处)
+  - [设计与实现](#设计与实现)
   - [实现 Runnable 接口和 Callable 接口的区别](#实现-runnable-接口和-callable-接口的区别)
+- [执行 execute()方法和 submit()方法的区别是什么呢？](#执行-execute方法和-submit方法的区别是什么呢)
+- [AtomicInteger 类的原理](#atomicinteger-类的原理)
 
 <!-- /TOC -->
 ### 为什么程序计数器、虚拟机栈和本地方法栈是线程私有的呢？为什么堆和方法区是线程共享的呢？

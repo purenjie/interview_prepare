@@ -1,5 +1,32 @@
-[TOC]
+<!-- TOC -->
 
+- [为什么程序计数器、虚拟机栈和本地方法栈是线程私有的呢？为什么堆和方法区是线程共享的呢？](#为什么程序计数器虚拟机栈和本地方法栈是线程私有的呢为什么堆和方法区是线程共享的呢)
+- [多线程的好处？](#多线程的好处)
+- [多线程可能的问题](#多线程可能的问题)
+- [线程的生命周期和状态](#线程的生命周期和状态)
+- [上下文切换？](#上下文切换)
+- [线程死锁](#线程死锁)
+  - [死锁情形和条件](#死锁情形和条件)
+  - [如何避免死锁？](#如何避免死锁)
+- [sleep() 方法和 wait() 方法区别和共同点?](#sleep-方法和-wait-方法区别和共同点)
+- [为什么我们调用 start() 方法时会执行 run() 方法，为什么我们不能直接调用 run() 方法？](#为什么我们调用-start-方法时会执行-run-方法为什么我们不能直接调用-run-方法)
+- [synchronized 关键字](#synchronized-关键字)
+  - [介绍一下 synchronized 关键字](#介绍一下-synchronized-关键字)
+  - [synchronized 关键字的使用](#synchronized-关键字的使用)
+  - [讲一下 synchronized 关键字的底层原理](#讲一下-synchronized-关键字的底层原理)
+  - [谈谈 synchronized 和 ReentrantLock 的共同点和区别？](#谈谈-synchronized-和-reentrantlock-的共同点和区别)
+- [volatile 关键字作用](#volatile-关键字作用)
+- [并发编程的三个重要特性](#并发编程的三个重要特性)
+- [说说 synchronized 关键字和 volatile 关键字的区别](#说说-synchronized-关键字和-volatile-关键字的区别)
+- [ThreadLocal](#threadlocal)
+  - [简介](#简介)
+  - [ThreadLocal 原理](#threadlocal-原理)
+  - [ThreadLocal 内存泄露问题](#threadlocal-内存泄露问题)
+- [线程池](#线程池)
+  - [为什么要用线程池（好处）？](#为什么要用线程池好处)
+  - [实现 Runnable 接口和 Callable 接口的区别](#实现-runnable-接口和-callable-接口的区别)
+
+<!-- /TOC -->
 ### 为什么程序计数器、虚拟机栈和本地方法栈是线程私有的呢？为什么堆和方法区是线程共享的呢？
 
 程序计数器：为了线程切换后能恢复到正确的执行位置
@@ -161,7 +188,7 @@ public class Singleton {
 ### 并发编程的三个重要特性
 
 - 原子性（要么都执行，要么都不执行。`synchronized` 可以保证代码片段的原子性。）
-- 可见性（当一个变量对共享变量进行了修改，其他线程都是可以看到修改后的最新值。`volatile` 关键字可以保证共享变量的可见性。）
+- 可见性（当一个线程对共享变量进行了修改，其他线程都是可以看到修改后的最新值。`volatile` 关键字可以保证共享变量的可见性。）
 - 有序性（代码在执行的过程中的先后顺序。`volatile` 关键字可以禁止指令进行重排序优化。）
 
 ### 说说 synchronized 关键字和 volatile 关键字的区别
@@ -191,19 +218,121 @@ public class Singleton {
 
 ### 线程池
 
+![线程池原理](https://camo.githubusercontent.com/e3c8d64487baa01192ccb6d1023c9d2b231c20c5067dbb8d53511889325c44d7/68747470733a2f2f6d792d626c6f672d746f2d7573652e6f73732d636e2d6265696a696e672e616c6979756e63732e636f6d2f323031392d372f2545352539422542452545382541372541332545372542412542462545372541382538422545362542312541302545352541452539452545372538452542302545352538452539462545372539302538362e706e67)
+
 #### 为什么要用线程池（好处）？
 
-- **降低资源消耗**。通过重复利用已创建的线程降低线程创建和销毁造成的资源消耗。
+- **降低资源消耗**。线程的创建和销毁都需要消耗系统资源，使用线程池重复利用已经创建的线程可以降低资源消耗。
 - **提高响应速度**。当任务到达时，任务可以不需要等到线程创建就能立即执行。
 - **提高线程的可管理性**。线程是稀缺资源，如果无限制的创建，不仅会消耗系统资源，还会降低系统的稳定性，使用线程池可以进行统一的分配，调优和监控。
+
+#### 设计与实现
+
+**总体设计**
+
+![继承关系](https://p1.meituan.net/travelcube/912883e51327e0c7a9d753d11896326511272.png)
+
+顶层接口 Executor 提供了一种思想：将任务提交和任务执行进行解耦。用户只需提供 Runnable 对象，将任务的运行逻辑提交到执行器 (Executor) 中，由 Executor 框架完成线程的调配和任务的执行部分。
+
+ThreadPoolExecutor 将会一方面**维护自身的生命周期**，另一方面同时**管理线程和任务**，使两者良好的结合从而执行并行任务。
+
+![运行流程](https://p0.meituan.net/travelcube/77441586f6b312a54264e3fcf5eebe2663494.png)
+
+线程池在内部实际上构建了一个**生产者消费者模型**，将线程和任务两者解耦，从而良好的缓冲任务，复用线程。
+
+**生命周期管理**
+
+`ctl` 这个 AtomicInteger 类型，是对**线程池的运行状态**和线程池中有**效线程的数量**进行控制的一个字段
+
+![线程池生命周期](https://p0.meituan.net/travelcube/582d1606d57ff99aa0e5f8fc59c7819329028.png)
+
+**任务管理**
+
+所有任务的调度都是由 `execute` 方法完成的。检查现在线程池的状态，决定接下来执行的流程
+
+![任务调度](https://p0.meituan.net/travelcube/31bad766983e212431077ca8da92762050214.png)
+
+阻塞队列的分类
+
+![阻塞队列](https://p0.meituan.net/travelcube/725a3db5114d95675f2098c12dc331c3316963.png)
+
+`getTask` 方法帮助线程从阻塞队列中获取任务，实现线程管理模块和任务管理模块之间的通信
+
+![获取任务流程](https://p0.meituan.net/travelcube/49d8041f8480aba5ef59079fcc7143b996706.png)
+
+任务拒绝策略
+
+![任务拒绝](https://p0.meituan.net/travelcube/9ffb64cc4c64c0cb8d38dac01c89c905178456.png)
+
+**线程管理**
+
+工作线程 `Worker `**掌握线程的状态**并**维护线程的生命周期**
+
+```java
+private final class Worker extends AbstractQueuedSynchronizer implements Runnable{
+    final Thread thread;//Worker持有的线程 可用来执行任务
+    Runnable firstTask;//初始化的任务，可以为null
+}
+```
+
+实现了 Runnable 接口，并持有一个线程 thread，一个初始化的任务 firstTask。
+
+线程池使用一张 Hash 表去持有线程的引用，这样可以通过添加引用、移除引用这样的操作来控制线程的生命周期。
+
+线程回收
+
+Worker 是通过继承 AQS，使用 AQS 来实现独占锁这个功能。
+
+线程回收的工作是在 `processWorkerExit` 方法完成的
+
+线程池在执行 `shutdown` 方法或 `tryTerminate` 方法时会调用 interruptIdleWorkers 方法来中断空闲的线程，interruptIdleWorkers 方法会使用 tryLock 方法来判断线程池中的线程是否是空闲状态；如果线程是空闲状态则可以安全回收。
+
+![线程回收](https://p1.meituan.net/travelcube/9d8dc9cebe59122127460f81a98894bb34085.png)
+
+线程增加
+
+通过线程池中的 `addWorker` 方法，该步骤仅仅完成增加线程，并使它运行，最后返回是否成功这个结果。
+
+`addWorker` 方法有两个参数：`firstTask`、`core`。firstTask 参数用于指定新增的线程执行的第一个任务，该参数可以为空；core 参数为 true 表示在新增线程时会判断当前活动线程数是否少于 corePoolSize，false 表示新增线程前需要判断当前活动线程数是否少于 maximumPoolSize
+
+执行任务
+
+在 Worker 类中的 `run` 方法调用了 `runWorker` 方法来执行任务
+
+1.while 循环不断地通过 `getTask ()` 方法获取任务。 2.getTask () 方法从阻塞队列中取任务。 3. 如果线程池正在停止，那么要保证当前线程是中断状态，否则要保证当前线程不是中断状态。 4. 执行任务。 5. 如果 getTask 结果为 null 则跳出循环，执行 `processWorkerExit ()` 方法，销毁线程。
+
+![线程池执行流程](https://p0.meituan.net/travelcube/879edb4f06043d76cea27a3ff358cb1d45243.png)
+
+
 
 #### 实现 Runnable 接口和 Callable 接口的区别
 
 - `Runnable`自 Java 1.0 以来一直存在；`Callable`在 Java 1.5 中引入，用来处理`Runnable`不支持的用例
+- `Runnable` 接口不会返回结果；`Callable` 接口可以返回结果，通过 `FutureTask` 进行封装
 
-- `Runnable` 接口不会返回结果或抛出检查异常；`Callable` 接口可以
-
-如果任务不需要返回结果或抛出异常推荐使用 Runnable` 接口
+如果任务不需要返回结果或抛出异常推荐使用 `Runnable` 接口
 
 工具类 `Executors` 可以实现 `Runnable` 对象和 `Callable` 对象之间的相互转换。
 
+### 执行 execute()方法和 submit()方法的区别是什么呢？
+
+1. `execute()`方法用于提交不需要返回值的任务，所以无法判断任务是否被线程池执行成功与否；
+2. `submit()`方法用于提交需要返回值的任务。线程池会返回一个 `Future` 类型的对象，通过这个 `Future` 对象可以判断任务是否执行成功
+
+### AtomicInteger 类的原理
+
+```java
+private static final Unsafe unsafe = Unsafe.getUnsafe();
+private static final long valueOffset;
+
+static {
+try {
+valueOffset = unsafe.objectFieldOffset
+(AtomicInteger.class.getDeclaredField("value"));
+} catch (Exception ex) { throw new Error(ex); }
+}
+
+private volatile int value;
+```
+
+AtomicInteger 类主要利用 CAS (compare and swap) + volatile 和 native 方法来保证原子操作，从而避免 synchronized 的高开销，执行效率大为提升。

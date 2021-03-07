@@ -339,3 +339,34 @@ private volatile int value;
 ```
 
 AtomicInteger 类主要利用 CAS (compare and swap) + volatile 和 native 方法来保证原子操作，从而避免 synchronized 的高开销，执行效率大为提升。
+
+### AQS
+
+#### AQS 介绍
+
+AQS 的全称为（AbstractQueuedSynchronizer），是一个用来构建锁和同步器的框架。ReentrantLock，Semaphore， ReentrantReadWriteLock，SynchronousQueue，FutureTask 等等皆是基于 AQS 的。
+
+#### AQS 原理
+
+AQS 核心思想是，如果被请求的共享资源（state）空闲，则将当前请求资源的线程设置为有效的工作线程（加锁线程），并且将共享资源设置为锁定状态。如果被请求的共享资源被占用，那么就需要一套线程阻塞等待以及被唤醒时锁分配的机制，这个机制 AQS 是用 CLH 队列锁实现的，即将暂时获取不到锁的线程加入到队列中。
+
+![原理图](https://images.xiaozhuanlan.com/photo/2020/d8497ffb9df13bf7fdef83bc938dd9a5.png)
+
+#### AQS 对资源的共享方式
+
+- **Exclusive**（独占）：只有一个线程能执行，如 `ReentrantLock`。又可分为公平锁和非公平锁：
+- **Share**（共享）：多个线程可同时执行，如 `CountDownLatch`、`Semaphore`、 `CyclicBarrier`、`ReadWriteLock` 
+
+```java
+isHeldExclusively()//该线程是否正在独占资源。只有用到condition才需要去实现它。
+tryAcquire(int)//独占方式。尝试获取资源，成功则返回true，失败则返回false。
+tryRelease(int)//独占方式。尝试释放资源，成功则返回true，失败则返回false。
+tryAcquireShared(int)//共享方式。尝试获取资源。负数表示失败；0表示成功，但没有剩余可用资源；正数表示成功，且有剩余资源。
+tryReleaseShared(int)//共享方式。尝试释放资源，成功则返回true，失败则返回false。
+```
+
+#### AQS 组件总结
+
+- Semaphore (信号量)- 允许多个线程同时访问
+- CountDownLatch （倒计时器）：常用来控制线程等待，让某一个线程等待直到倒计时结束，再开始执行
+- CyclicBarrier (循环栅栏)：和 CountDownLatch 非常类似。让一组线程到达一个屏障（也可以叫同步点）时被阻塞，直到最后一个线程到达屏障时，屏障才会开门。

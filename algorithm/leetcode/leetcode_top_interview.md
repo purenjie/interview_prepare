@@ -37,6 +37,8 @@
 - [50. Pow(x, n)](#50-powx-n)
 - [53. 最大子序和](#53-最大子序和)
 - [54. 螺旋矩阵](#54-螺旋矩阵)
+- [55. 跳跃游戏 @贪心](#55-跳跃游戏-贪心)
+- [45. 跳跃游戏 II](#45-跳跃游戏-ii)
 
 <!-- /TOC -->
 #### 1. 两数之和 @哈希
@@ -1610,7 +1612,7 @@ class Solution {
     public double quickMul(double x, long n) {
         if(n == 0)  return 1.0;
         double y = quickMul(x, n / 2);
-        return n % 2 == 0 ? y * y : y * y * x;
+        return (n & 1) == 0 ? y * y : y * y * x;
     }
 }
 ```
@@ -1653,17 +1655,16 @@ class Solution {
 ```java
 class Solution {
     public int maxSubArray(int[] nums) {
-        // dp[i] nums[:i] max sum
-        int[] dp = new int[nums.length];
-        // base case
-        dp[0] = nums[0];
-        int sum = 0;
-        // sum: nums[i] 所在的序列的最大值
-        for(int i = 1; i < nums.length; i++) {
-            sum = Math.max(sum + nums[i], nums[i]);
-            dp[i] = Math.max(dp[i - 1], sum);
+        // 当前子序列的最优解
+        // 要么加前面的序列要么舍弃
+        int curr = 0; 
+        // dp[i] 当前位置的最优值
+        int res = nums[0];
+        for(int num : nums) {
+            curr = Math.max(num, curr + num);
+            res = Math.max(res, curr);
         }
-        return dp[nums.length - 1];
+        return res;
     }
 }
 ```
@@ -1673,6 +1674,7 @@ class Solution {
 ```java
 class Solution {
     public int maxSubArray(int[] nums) {
+        // curr 为每一次的当前最优解
         int curr = 0;
         int res = nums[0];
         for(int num : nums) {
@@ -1727,4 +1729,143 @@ class Solution {
     }
 }
 ```
+
+#### 55. 跳跃游戏 @贪心
+
+[题目链接](https://leetcode-cn.com/problems/jump-game/)
+
+```
+判断能否跳到最后一个位置
+输入：nums = [2,3,1,1,4]
+输出：true
+解释：可以先跳 1 步，从下标 0 到达下标 1, 然后再从下标 1 跳 3 步到达最后一个下标。
+```
+
+贪心算法：每次选择当前最优解，通过每一步的最优解更新全局最优解
+
+```java
+class Solution {
+    public boolean canJump(int[] nums) {
+        int n = nums.length;
+        // 当前最优解
+        int farthest = 0;
+        for(int i = 0; i < n - 1; i++) {
+            int curr = i + nums[i];
+            farthest = Math.max(farthest, curr);
+            // 当前位置的最优解没法再前进了
+            // 也就无法到达最后一个位置
+            if(farthest <= i)   return false;
+        }
+        return farthest >= n - 1;
+    }
+}
+```
+
+#### 45. 跳跃游戏 II
+
+[题目链接](https://leetcode-cn.com/problems/jump-game-ii/)
+
+```输入: [2,3,1,1,4]
+一定能跳到最后，判断最少次数
+输入: [2,3,1,1,4]
+输出: 2
+解释: 跳到最后一个位置的最小跳跃数是 2。
+     从下标为 0 跳到下标为 1 的位置，跳 1 步，然后跳 3 步到达数组的最后一个位置。
+```
+
+- 解法一：动态规划 递归 + 记事本
+
+```java
+class Solution {
+    public int jump(int[] nums) {
+        int[] memo = new int[nums.length];
+        // 最多跳跃 n - 1 次
+        Arrays.fill(memo, nums.length);
+        return dp(nums, 0, memo);
+    }
+
+    // dp(nums, p, memo)    p 位置到末尾的最小次数
+    // 状态：p 所在位置
+    // 状态转移：p -> p + i
+    public int dp(int[] nums, int p, int[] memo) {
+        int n = nums.length;
+        // base case
+        if(p >= n - 1)  return 0;
+        // choice
+        if(memo[p] != n)    return memo[p];
+
+        int steps = nums[p];
+        for(int i = 1; i <= steps; i++) {
+            int subRes = dp(nums, p + i, memo);
+            memo[p] = Math.min(memo[p], subRes + 1);
+        }
+        return memo[p];
+    }
+}
+```
+
+- 解法二：动态规划 迭代
+
+```java
+class Solution {
+    public int jump(int[] nums) {
+        int n = nums.length;
+        if(n == 1 || n == 0)    return 0;
+        // dp[i] i -> n-1 最小次数
+        int[] dp = new int[n];
+        // base case
+        Arrays.fill(dp, n);
+        dp[n - 1] = 0;
+        // choice
+        for(int i = n - 2; i >= 0; i--) {
+            int steps = nums[i];
+            for(int j = 1; j <= steps; j++) {
+                // 超过最大范围就跳出
+                if(i + j > n - 1)   break; 
+                if(dp[i + j] != n)  dp[i] = Math.min(dp[i], 1 + dp[i + j]);
+            }
+        }
+        return dp[0];
+    }
+}
+```
+
+上述两个方法都超时
+
+- 解法三：贪心算法
+
+```java
+class Solution {
+    public int jump(int[] nums) {
+        int n = nums.length;
+        // i -> end 每一步的局部最优解，最后就是全局最优解
+        int i = 0;
+        int end = 0;
+        
+        int jump = 0;
+        int farthest = 0;
+        while(end < n - 1) {
+            farthest = Math.max(farthest, i + nums[i]);
+            if(i == end) {
+                jump++;
+                end = farthest;
+            }
+            i++;
+        }
+        return jump;
+    }
+}
+```
+
+> - 时间复杂度比较
+>
+> DP：O(n^2)
+>
+> 贪心：O(n)
+>
+> - 分析
+>
+> 贪心没有像动态规划一样在每一步里比较所有可能的结果，而是在每一步直接选择最有可能的结果，所用时间更少。
+
+
 

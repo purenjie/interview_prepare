@@ -126,6 +126,14 @@ synchronized 关键字最主要的三种使用方式：
 - `synchronized` 关键字加到 `static` 静态方法和 `synchronized(class)` 代码块上都是是给 Class 类上锁。
 - `synchronized` 关键字加到实例方法上是给对象实例上锁。
 
+> 锁住对象和锁住类的区别
+>
+> 锁住对象只能保证其他线程不会拿到该对象的锁，但是可以拿到类的其他对象的锁
+>
+> 锁住类相当于全局锁，该类的所有对象都被上锁
+
+[Java 线程同步：synchronized 锁住的是代码还是对象（代码示例）](https://blog.csdn.net/xiao__gui/article/details/8188833)
+
 **手写单例模式双重检验锁方式实现**
 
 ```java
@@ -138,7 +146,7 @@ public class Singleton {
     public  static Singleton getUniqueInstance() {
        //先判断对象是否已经实例过，没有实例化过才进入加锁代码
         if (uniqueInstance == null) {
-            //类对象加锁
+            //类加锁
             synchronized (Singleton.class) {
                 if (uniqueInstance == null) {
                     uniqueInstance = new Singleton();
@@ -184,9 +192,11 @@ public class Singleton {
 
     `ReentrantLock`可以指定是公平锁还是非公平锁（通过构造方法）。而`synchronized`只能是非公平锁
 
-   - **可实现选择性通知（锁可以绑定多个条件）**
+   - **可实现选择性通知（锁可以绑定多个条件？）**
 
    `synchronized`关键字与`wait()`和`notify()`/`notifyAll()`方法相结合可以实现等待/通知机制。`ReentrantLock`类当然也可以实现，但是需要借助于`Condition`接口与`newCondition()`方法。
+
+![](https://p0.meituan.net/travelcube/412d294ff5535bbcddc0d979b2a339e6102264.png)
 
 ### volatile 关键字作用
 
@@ -208,13 +218,15 @@ public class Singleton {
 
 ### ThreadLocal
 
-#### 简介
+> ThreadLocal 类似于监考的考官，线程类似于考生，考官发放试卷之后每个考生有一个自己的副本，考生无法看其他人的试卷。
 
-`ThreadLocal`类的作用是提供线程内的局部变量，可以将`ThreadLocal`类形象的比喻成存放数据的盒子，盒子中可以存储每个线程的私有数据。
+#### 简介和应用
+
+`ThreadLocal` 是线程的内部存储类，用于存储线程的局部变量。
 
 #### ThreadLocal 原理
 
-`Thread`类源代码有一个 `threadLocals` 和一个 `inheritableThreadLocals` 变量，都是 `ThreadLocalMap` 类型。当前线程调用 `ThreadLocal` 类的 `set`或`get`方法时，调用的是`ThreadLocalMap`类对应的 `get()`、`set()`方法。
+`Thread` 类源代码有一个 `threadLocals` 和一个 `inheritableThreadLocals` 变量，都是 `ThreadLocalMap` 类型。当前线程调用 `ThreadLocal` 类的 `set`或`get`方法时，调用的是`ThreadLocalMap`类对应的 `get()`、`set()`方法。
 
 最终的变量是放在了当前线程的 `ThreadLocalMap` 中，`ThreadLocal`为 key ，Object 对象为 value
 
@@ -225,6 +237,18 @@ public class Singleton {
 `ThreadLocalMap` 在调用 `set()`、`get()`、`remove()` 方法的时候，会清理掉 key 为 null 的记录。使用完 `ThreadLocal`方法后 最好手动调用`remove()`方法。
 
 ### 线程池
+
+> 是什么？一种基于池化思想的管理线程的工具；实现（实现类源码、任务提交和任务执行解耦）
+>
+> 为什么？3 点好处
+>
+> 怎么用？维护线程周期（ctl）；管理线程（线程执行流程）；管理任务（任务执行流程）
+
+线程池（Thread Pool）是一种基于池化思想的管理线程的工具。-> 3 点好处
+
+线程池的核心实现类是 `ThreadPoolExecutor`，一方面**维护自身的生命周期**，另一方面**管理线程和任务**。
+
+线程池在内部实际上构建了一个生产者消费者模型，将**线程**和**任务**两者解耦，从而良好的缓冲任务，复用线程。-> 执行流程
 
 ![线程池原理](https://camo.githubusercontent.com/e3c8d64487baa01192ccb6d1023c9d2b231c20c5067dbb8d53511889325c44d7/68747470733a2f2f6d792d626c6f672d746f2d7573652e6f73732d636e2d6265696a696e672e616c6979756e63732e636f6d2f323031392d372f2545352539422542452545382541372541332545372542412542462545372541382538422545362542312541302545352541452539452545372538452542302545352538452539462545372539302538362e706e67)
 
@@ -250,7 +274,9 @@ ThreadPoolExecutor 将会一方面**维护自身的生命周期**，另一方面
 
 **生命周期管理**
 
-`ctl` 这个 AtomicInteger 类型，是对**线程池的运行状态**和线程池中有**效线程的数量**进行控制的一个字段
+`ctl` 这个 AtomicInteger 类型，是对**线程池的运行状态**和线程池中有**效线程的数量**进行控制的一个字段。高 3 位保存 runState，低 29 位保存 workerCount
+
+![运行状态](https://p0.meituan.net/travelcube/62853fa44bfa47d63143babe3b5a4c6e82532.png)
 
 ![线程池生命周期](https://p0.meituan.net/travelcube/582d1606d57ff99aa0e5f8fc59c7819329028.png)
 
@@ -311,9 +337,7 @@ Worker 是通过继承 AQS，使用 AQS 来实现独占锁这个功能。
 
 ![线程池执行流程](https://p0.meituan.net/travelcube/879edb4f06043d76cea27a3ff358cb1d45243.png)
 
-
-
-#### 实现 Runnable 接口和 Callable 接口的区别
+### 实现 Runnable 接口和 Callable 接口的区别
 
 - `Runnable`自 Java 1.0 以来一直存在；`Callable`在 Java 1.5 中引入，用来处理`Runnable`不支持的用例
 - `Runnable` 接口不会返回结果；`Callable` 接口可以返回结果，通过 `FutureTask` 进行封装
@@ -326,6 +350,8 @@ Worker 是通过继承 AQS，使用 AQS 来实现独占锁这个功能。
 
 1. `execute()`方法用于提交不需要返回值的任务，所以无法判断任务是否被线程池执行成功与否；
 2. `submit()`方法用于提交需要返回值的任务。线程池会返回一个 `Future` 类型的对象，通过这个 `Future` 对象可以判断任务是否执行成功
+
+[如何优雅的使用和理解线程池](https://crossoverjie.top/2018/07/29/java-senior/ThreadPool/)
 
 ### AtomicInteger 类的原理
 
@@ -353,7 +379,9 @@ AQS 的全称为（AbstractQueuedSynchronizer），是一个用来构建锁和�
 
 #### AQS 原理
 
-AQS 核心思想是，如果被请求的共享资源（state）空闲，则将当前请求资源的线程设置为有效的工作线程（加锁线程），并且将共享资源设置为锁定状态。如果被请求的共享资源被占用，那么就需要一套线程阻塞等待以及被唤醒时锁分配的机制，这个机制 AQS 是用 CLH 队列锁实现的，即将暂时获取不到锁的线程加入到队列中。
+AQS 核心思想是，如果被请求的共享资源空闲，那么就将当前请求资源的线程设置为有效的工作线程，将共享资源设置为锁定状态；如果共享资源被占用，就需要一定的阻塞等待唤醒机制来保证锁分配（双向链表）。这个机制主要用的是 CLH 队列的变体实现的，将暂时获取不到锁的线程加入到队列中。
+
+AQS 使用一个 Volatile 的 int 类型的成员变量来表示同步状态，通过内置的 FIFO 队列来完成资源获取的排队工作，通过 CAS 完成对 State 值的修改。
 
 ![原理图](https://images.xiaozhuanlan.com/photo/2020/d8497ffb9df13bf7fdef83bc938dd9a5.png)
 

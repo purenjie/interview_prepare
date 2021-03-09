@@ -261,7 +261,191 @@ ConcurrentHashMap 使用 Node 数组+链表+红黑树的数据结构来实现，
 
 [Java集合框架常见面试题](https://github.com/Snailclimb/JavaGuide/blob/master/docs/java/collection/Java%E9%9B%86%E5%90%88%E6%A1%86%E6%9E%B6%E5%B8%B8%E8%A7%81%E9%9D%A2%E8%AF%95%E9%A2%98.md)
 
+### ArrayList 源码
+
+构造方法
+
+```java
+// 无参构造 
+// 创建空数组 容量为 0
+public ArrayList() {this.elementData = DEFAULTCAPACITY_EMPTY_ELEMENTDATA;}
+
+// 传入 initialCapacity
+// < 0 异常；== 0 创建空数组；> 0 新建长度为 initialCapacity 的 Object 数组.
+public ArrayList(int initialCapacity) {
+    if (initialCapacity > 0) {
+        this.elementData = new Object[initialCapacity];
+    } else if (initialCapacity == 0) {
+        this.elementData = EMPTY_ELEMENTDATA;
+    } else {
+        throw new IllegalArgumentException("Illegal Capacity: "+
+                                           initialCapacity);
+    }
+}
+
+// 传入集合
+// 集合长度为 0 创建空数组；不空复制集合元素到 elementData 数组
+public ArrayList(Collection<? extends E> c) {
+    elementData = c.toArray();
+    if ((size = elementData.length) != 0) {
+        if (elementData.getClass() != Object[].class)
+            elementData = Arrays.copyOf(elementData, size, Object[].class);
+    } else {
+        this.elementData = EMPTY_ELEMENTDATA;
+    }
+}
+```
+
+add(e)
+
+1. 计算容量 `ensureCapacityInternal(size + 1)`
+2. 如果 `size + 1` 大于数组长度，调用 `grow()` 扩容
+3. `oldCapacity` 右移变为 1.5 倍，如果小于 `size + 1`，`newCapacity = size + 1`
+4. 拷贝，扩容，构建新数组
+
+```java
+public boolean add(E e) {
+    ensureCapacityInternal(size + 1);  // Increments modCount!!
+    elementData[size++] = e;//在数组末尾追加一个元素，并修改size
+    return true;
+}
+    private static final int DEFAULT_CAPACITY = 10;
+    private void ensureCapacityInternal(int minCapacity) {
+        if (elementData == DEFAULTCAPACITY_EMPTY_ELEMENTDATA) {
+            minCapacity = Math.max(DEFAULT_CAPACITY, minCapacity);
+        }
+
+        ensureExplicitCapacity(minCapacity);
+    }
 
 
+private void ensureExplicitCapacity(int minCapacity) {
+    modCount++;//如果确定要扩容，会修改modCount 
+    if (minCapacity - elementData.length > 0)
+        grow(minCapacity);
+}
 
+private void grow(int minCapacity) {
+    int oldCapacity = elementData.length;
+    int newCapacity = oldCapacity + (oldCapacity >> 1);
+    if (newCapacity - minCapacity < 0)
+        newCapacity = minCapacity;
+    if (newCapacity - MAX_ARRAY_SIZE > 0)
+        newCapacity = hugeCapacity(minCapacity);
+    elementData = Arrays.copyOf(elementData, newCapacity);
+}
+```
+
+remove(int index)
+
+1. 从头部删除，删除头结点然后移动后面的数据，最后一个元素置空。
+
+2. 从中间指定位置删除，找到要删除数据的位置，删除后，后面的数据移动，最后一个元素置空。
+
+3. 从尾部删除：直接删除尾部数据完成删除操作。
+
+```java
+public E remove(int index) {
+    rangeCheck(index);//判断是否越界
+    modCount++;//修改modeCount 因为结构改变了
+    E oldValue = elementData(index);//读出要删除的值
+    int numMoved = size - index - 1;
+    if (numMoved > 0)
+        System.arraycopy(elementData, index+1, elementData, index,
+                         numMoved);//用复制 覆盖数组数据
+    elementData[--size] = null; // clear to let GC do its work  //置空原尾部数据 不再强引用， 可以GC掉
+    return oldValue;
+}
+```
+
+### HashMap 源码（1.8）
+
+构造方法
+
+1. 传入初始容量 / 初始容量和加载因子
+2. 传入键值对
+3. 无参构造
+
+```java
+public HashMap(int initialCapacity) {this(initialCapacity, DEFAULT_LOAD_FACTOR);}
+```
+
+initialCapacity 初始容量（默认 16）
+
+threshold 阈值 `threshold=initialCapacity*loadFactor` 构造方法中直接通过 `tableSizeFor (initialCapacity)` 方法进行了赋值，用来找到大于或等于 initialCapacity 的最小2的幂
+
+loadFactor 加载因子（默认 0.75）
+
+- put(key, value)
+
+1. `put()` 调用 `putVal()` 方法
+2. 判断 table 是否初始化，没有的话对数据进行初始化
+3. 通过 hash 算法找到下标位置
+   - 下标位置为空，直接存放数据
+   - 发生碰撞
+     - key 值相同，覆盖
+     - key 值不同，红黑树 or 链表插入（是否转红黑树）
+
+```java
+public V put(K key, V value) {
+    return putVal(hash(key), key, value, false, true);
+}
+
+final V putVal(int hash, K key, V value, boolean onlyIfAbsent,
+               boolean evict) {
+    Node<K,V>[] tab; Node<K,V> p; int n, i;
+    if ((tab = table) == null || (n = tab.length) == 0)
+        //如果table尚未初始化，则此处进行初始化数组，并赋值初始容量，重新计算阈值
+        n = (tab = resize()).length;
+    if ((p = tab[i = (n - 1) & hash]) == null)
+        //通过hash找到下标，如果hash值指定的位置数据为空，则直接将数据存放进去
+        tab[i] = newNode(hash, key, value, null);
+    else {
+        //如果通过hash找到的位置有数据，发生碰撞
+        Node<K,V> e; K k;
+        if (p.hash == hash &&
+            ((k = p.key) == key || (key != null && key.equals(k))))
+            //如果需要插入的key和当前hash值指定下标的key一样，先将e数组中已有的数据
+            e = p;
+        else if (p instanceof TreeNode)
+            //如果此时桶中数据类型为 treeNode，使用红黑树进行插入
+            e = ((TreeNode<K,V>)p).putTreeVal(this, tab, hash, key, value);
+        else {
+            //此时桶中数据类型为链表
+            // 进行循环
+            for (int binCount = 0; ; ++binCount) {
+                if ((e = p.next) == null) {
+                    //如果链表中没有最新插入的节点，将新放入的数据放到链表的末尾
+                    p.next = newNode(hash, key, value, null);
+
+                    //如果链表过长，达到树化阈值，将链表转化成红黑树
+                    if (binCount >= TREEIFY_THRESHOLD - 1) // -1 for 1st
+                        treeifyBin(tab, hash);
+                    break;
+                }
+                //如果链表中有新插入的节点位置数据不为空，则此时e 赋值为节点的值，跳出循环
+                if (e.hash == hash &&
+                    ((k = e.key) == key || (key != null && key.equals(k))))
+                    break;
+                p = e;
+            }
+        }
+
+        //经过上面的循环后，如果e不为空，则说明上面插入的值已经存在于当前的hashMap中，那么更新指定位置的键值对
+        if (e != null) { // existing mapping for key
+            V oldValue = e.value;
+            if (!onlyIfAbsent || oldValue == null)
+                e.value = value;
+            afterNodeAccess(e);
+            return oldValue;
+        }
+    }
+    ++modCount;
+    //如果此时hashMap size大于阈值，则进行扩容
+    if (++size > threshold)
+        resize();
+    afterNodeInsertion(evict);
+    return null;
+}
+```
 

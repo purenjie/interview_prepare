@@ -1867,5 +1867,156 @@ class Solution {
 >
 > 贪心没有像动态规划一样在每一步里比较所有可能的结果，而是在每一步直接选择最有可能的结果，所用时间更少。
 
+#### 56. 合并区间
 
+[题目链接](https://leetcode-cn.com/problems/merge-intervals/)
+
+```
+输入：intervals = [[1,3],[2,6],[8,10],[15,18]]
+输出：[[1,6],[8,10],[15,18]]
+解释：区间 [1,3] 和 [2,6] 重叠, 将它们合并为 [1,6].
+```
+
+```java
+// 先排序然后合并
+class Solution {
+    public int[][] merge(int[][] intervals) {
+        // 对数组进行排序，按照第一个元素升序排列
+        Arrays.sort(intervals, (arr1, arr2) -> {
+            return arr1[0] - arr2[0];
+        });
+
+        List<int[]> res = new ArrayList<>();
+        int[] curr = intervals[0];
+        int i = 0;
+        // 当前数组和后面比较
+        // 重叠就更新数组
+        // 不重叠就加到结果中并更新数组
+        while(i + 1 < intervals.length) {
+            if(curr[1] < intervals[i + 1][0]) { // [2,6] [8,10]
+                res.add(curr);
+                curr = intervals[i + 1];
+            } else { // [1,3] [2,6]
+                curr[1] = Math.max(curr[1], intervals[i + 1][1]); // [1,4] [2,3] 注意这种情况
+            }
+            i++;
+        }
+        res.add(curr); // 不管是否重叠最后都要加上
+        
+        int[][] ans = res.toArray(new int[res.size()][]);
+        return ans;
+    }
+}
+```
+
+> Arrays.sort(array, (a, b) -> {return a - b;});
+
+#### 62. 不同路径
+
+[题目链接](https://leetcode-cn.com/problems/unique-paths/)
+
+```java
+// DP
+class Solution {
+    public int uniquePaths(int m, int n) {
+        // dp[i][j] dp[0][0] -> dp[i][j] tracks
+        int[][] dp = new int[m][n];
+        // base case 
+        for(int i = 0; i < m; i++)  dp[i][0] = 1;
+        for(int i = 0; i < n; i++)  dp[0][i] = 1;
+
+        // choice
+        // dp[i][j] = dp[i-1][j] + dp[i][j-1]
+        for(int i = 1; i < m; i++) {
+            for(int j = 1; j < n; j++) {
+                dp[i][j] = dp[i-1][j] + dp[i][j-1];
+            }
+        }
+        return dp[m-1][n-1];
+    }
+}
+
+// 状态压缩 去掉第一个维度
+class Solution {
+    public int uniquePaths(int m, int n) {
+        int[] dp = new int[n];
+        Arrays.fill(dp, 1);
+
+        for(int i = 1; i < m; i++) {
+            for(int j = 1; j < n; j++) {
+                dp[j] += dp[j-1];
+            }
+        }
+        return dp[n-1];
+    }
+}
+```
+
+#### 66. 加一
+
+[题目链接](https://leetcode-cn.com/problems/plus-one/)
+
+```
+输入：digits = [1,2,3]
+输出：[1,2,4]
+解释：输入数组表示数字 123。
+```
+
+```java
+class Solution {
+    public int[] plusOne(int[] digits) {
+        // 最后一位是不是 9
+        // 是 9 的话一直进位
+        // 超过数组容量新建数组
+        int[] res = digits;
+        int n = res.length;
+        if(res[n - 1] != 9) {
+            res[n - 1]++;
+        } else {
+            int i = n - 1;
+            for(; i >= 0; i--) {
+                if(res[i] == 9) res[i] = 0;
+                else break;
+            }
+            if(i >= 0)  res[i]++;
+            else {
+                res = new int[n + 1];
+                res[0] = 1;
+            }
+        }
+        return res;
+    }
+}
+```
+
+#### 70. 爬楼梯
+
+[题目链接](https://leetcode-cn.com/problems/climbing-stairs/)
+
+```
+输入： 2
+输出： 2
+解释： 有两种方法可以爬到楼顶。
+1.  1 阶 + 1 阶
+2.  2 阶
+```
+
+```java
+class Solution {
+    // 迭代
+    // dp[i] = dp[i - 1] + dp[i - 2]
+    public int climbStairs(int n) {
+        if(n == 1)  return 1;
+        if(n == 2)  return 2;
+        int pre1 = 1, pre2 = 2;
+        int res = 0;
+        for(int i = 3; i <= n; i++) {
+            res = pre1 + pre2;
+            pre1 = pre2;
+            pre2 = res;
+        }
+        return res;
+    }
+}
+```
 

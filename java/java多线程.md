@@ -19,19 +19,21 @@
 - [并发编程的三个重要特性](#并发编程的三个重要特性)
 - [说说 synchronized 关键字和 volatile 关键字的区别](#说说-synchronized-关键字和-volatile-关键字的区别)
 - [ThreadLocal](#threadlocal)
-  - [简介](#简介)
+  - [简介和应用](#简介和应用)
   - [ThreadLocal 原理](#threadlocal-原理)
   - [ThreadLocal 内存泄露问题](#threadlocal-内存泄露问题)
 - [线程池](#线程池)
   - [为什么要用线程池（好处）？](#为什么要用线程池好处)
+  - [线程池的创建](#线程池的创建)
   - [设计与实现](#设计与实现)
-  - [实现 Runnable 接口和 Callable 接口的区别](#实现-runnable-接口和-callable-接口的区别)
+- [实现 Runnable 接口和 Callable 接口的区别](#实现-runnable-接口和-callable-接口的区别)
 - [执行 execute()方法和 submit()方法的区别是什么呢？](#执行-execute方法和-submit方法的区别是什么呢)
 - [AtomicInteger 类的原理](#atomicinteger-类的原理)
 - [AQS](#aqs)
   - [AQS 介绍](#aqs-介绍)
   - [AQS 原理](#aqs-原理)
   - [AQS 对资源的共享方式](#aqs-对资源的共享方式)
+  - [AQS 执行流程](#aqs-执行流程)
   - [AQS 组件总结](#aqs-组件总结)
 
 <!-- /TOC -->
@@ -70,7 +72,7 @@
 
 ### 上下文切换？
 
-在统一时刻一个 CPU 只能被一个线程使用，CPU 采用时间片轮转的形式供线程使用。所以线程切换的时候需要当前线程保存自己的状态，得到时间片的线程加载之前保存的状态。任务从保存到再加载的过程就是一次上下文切换。
+在同一时刻一个 CPU 只能被一个线程使用，CPU 采用时间片轮转的形式供线程使用。所以线程切换的时候需要当前线程保存自己的状态，得到时间片的线程加载之前保存的状态。任务从保存到再加载的过程就是一次上下文切换。
 
 ### 线程死锁
 
@@ -238,13 +240,13 @@ public class Singleton {
 
 ### 线程池
 
-> 是什么？一种基于池化思想的管理线程的工具；实现（实现类源码、任务提交和任务执行解耦）
+> 是什么？一种基于池化思想的线程管理工具；实现（实现类源码、任务提交和任务执行解耦）
 >
 > 为什么？3 点好处
 >
 > 怎么用？维护线程周期（ctl）；管理线程（线程执行流程）；管理任务（任务执行流程）
 
-线程池（Thread Pool）是一种基于池化思想的管理线程的工具。-> 3 点好处
+线程池（Thread Pool）是一种基于池化思想的管理线程的工具。
 
 线程池的核心实现类是 `ThreadPoolExecutor`，一方面**维护自身的生命周期**，另一方面**管理线程和任务**。
 
@@ -252,11 +254,24 @@ public class Singleton {
 
 ![线程池原理](https://camo.githubusercontent.com/e3c8d64487baa01192ccb6d1023c9d2b231c20c5067dbb8d53511889325c44d7/68747470733a2f2f6d792d626c6f672d746f2d7573652e6f73732d636e2d6265696a696e672e616c6979756e63732e636f6d2f323031392d372f2545352539422542452545382541372541332545372542412542462545372541382538422545362542312541302545352541452539452545372538452542302545352538452539462545372539302538362e706e67)
 
+![ThreadPool](https://img-blog.csdnimg.cn/2018122411100636)
+
 #### 为什么要用线程池（好处）？
 
 - **降低资源消耗**。线程的创建和销毁都需要消耗系统资源，使用线程池重复利用已经创建的线程可以降低资源消耗。
 - **提高响应速度**。当任务到达时，任务可以不需要等到线程创建就能立即执行。
 - **提高线程的可管理性**。线程是稀缺资源，如果无限制的创建，不仅会消耗系统资源，还会降低系统的稳定性，使用线程池可以进行统一的分配，调优和监控。
+
+#### 线程池的创建
+
+- newFixedThreadPool()
+- newSingleThreadExecutor()
+- newScheduledThreadPool()
+- newCachedThreadPool()
+
+`ThreadPoolExecutor(int corePoolSize, int maximumPoolSize, 
+long keepAliveTime, TimeUnit unit, BlockingQueue<Runnable> workQueue, 
+ThreadFactory threadFactory, RejectedExecutionHandler handler)`
 
 #### 设计与实现
 
@@ -274,7 +289,7 @@ ThreadPoolExecutor 将会一方面**维护自身的生命周期**，另一方面
 
 **生命周期管理**
 
-`ctl` 这个 AtomicInteger 类型，是对**线程池的运行状态**和线程池中有**效线程的数量**进行控制的一个字段。高 3 位保存 runState，低 29 位保存 workerCount
+AtomicInteger 类型的 `ctl` 变量对**线程池的运行状态**和**线程池中有效线程数量**进行控制。高 3 位保存 runState，低 29 位保存 workerCount
 
 ![运行状态](https://p0.meituan.net/travelcube/62853fa44bfa47d63143babe3b5a4c6e82532.png)
 
@@ -397,6 +412,21 @@ tryRelease(int)//独占方式。尝试释放资源，成功则返回true，失�
 tryAcquireShared(int)//共享方式。尝试获取资源。负数表示失败；0表示成功，但没有剩余可用资源；正数表示成功，且有剩余资源。
 tryReleaseShared(int)//共享方式。尝试释放资源，成功则返回true，失败则返回false。
 ```
+
+#### AQS 执行流程
+
+1. 多个线程并发抢锁
+2. 线程一通过 CAS 抢到锁并设置为工作线程
+3. 线程二和线程三调用 addWaiter() 加入 FIFO 等待队列
+
+> enq() ：队列为 null 先创建 Node 节点，然后将线程加到队列中
+
+4. 队列中的线程执行 LockSupport.park() 挂起
+5. 线程一释放锁，按照公平锁/非公平锁抢占资源
+
+> 公平锁：如果 state=0 则代表此时没有线程持有锁，执行 hasQueuedPredecessors() 判断 AQS 等待队列中是否有元素存在，如果存在其他等待线程，那么自己也会加入到等待队列尾部，做到真正的先来后到，有序加锁。
+
+[【深入 AQS 原理】我画了 35 张图就是为了让你深入 AQS](https://cloud.tencent.com/developer/article/1624354)
 
 #### AQS 组件总结
 

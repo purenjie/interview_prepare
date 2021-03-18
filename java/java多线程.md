@@ -123,14 +123,17 @@ synchronized 关键字最主要的三种使用方式：
 
 1. 修饰实例方法：获取当前对象实例的锁 `synchronized void method() {}`
 2. 修饰静态方法：获得当前 class 的锁 `synchronized static void method() {}`
-3. 修饰代码块：获得当前对象实例 OR class 的锁 `synchronized(this | object) {}`
+3. 修饰代码块：
+
+   - `synchronized(this)` 获取当前对象实例的锁
+   - `synchronized(类名.class)` 获得当前 class 的锁
 
 - `synchronized` 关键字加到 `static` 静态方法和 `synchronized(class)` 代码块上都是是给 Class 类上锁。
 - `synchronized` 关键字加到实例方法上是给对象实例上锁。
 
 > 锁住对象和锁住类的区别
 >
-> 锁住对象只能保证其他线程不会拿到该对象的锁，但是可以拿到类的其他对象的锁
+> 锁住对象只能保证其他线程不会拿到该对象的锁，但是可以拿到类的其他对象的锁。因此多个线程创建一个类的多个对象的时候，synchronized 相当于没有用。
 >
 > 锁住类相当于全局锁，该类的所有对象都被上锁
 
@@ -171,6 +174,8 @@ public class Singleton {
 使用是 `monitorenter` 和 `monitorexit` 指令，其中 `monitorenter` 指令指向同步代码块的开始位置，`monitorexit` 指令则指明同步代码块的结束位置。
 
 执行`monitorenter`时，会尝试获取对象的锁，由 0 -> 1；执行 `monitorexit` 指令后，将锁计数器设为 0
+
+Java 虚拟机 (HotSpot) 中，Monitor 是基于 C++ 实现的，由 ObjectMonitor 实现，再往下 CAS 获取锁
 
 **两者的本质都是对对象监视器 monitor 的获取**
 
@@ -433,3 +438,35 @@ tryReleaseShared(int)//共享方式。尝试释放资源，成功则返回true�
 - Semaphore (信号量)- 允许多个线程同时访问
 - CountDownLatch （倒计时器）：常用来控制线程等待，让某一个线程等待直到倒计时结束，再开始执行
 - CyclicBarrier (循环栅栏)：和 CountDownLatch 非常类似。让一组线程到达一个屏障（也可以叫同步点）时被阻塞，直到最后一个线程到达屏障时，屏障才会开门。
+
+### CAS
+
+CAS 是 Compare And Swap 的简称，即：比较并交换。这是当前的处理器基本都支持的一种指令。每个 CAS 指令包括三个运算符，一个内存地址 V，一个期望值 A 和一个新值 B，CAS 指令执行的时候是去判断这个地址 V 上的值和期望值 A 是否相等，相等则将地址 V 上的值修改为新值 B，不等则不作任何操作。CAS 操作实际实现是在一个循环中不断执行 CAS 指令，直到成功为止。
+
+#### CAS 如何实现线程安全？
+
+CAS 实现线程安全不在代码层面处理，而是交给硬件 - CPU 和内存，利用 CPU 的多处理能力，实现硬件层面的阻塞，然后加上 volidate 变量的特性即可实现基于原子操作的线程安全。
+
+#### CAS 实现原子操作的三大问题
+
+- ABA 问题
+
+原来的值是 A，后来变成 B，然后又改回 A，那么 CAS 检查的时候发现值还是初始的 A，并没有发生变化。然后实际上却是已经变化了。
+
+解决方法：加版本号，比如 1A 2B 3A
+
+- 循环时间长、开销大
+
+自旋 CAS 长时间都不成功的话，会对 CPU 带来很大的执行开销。
+
+- 只能保证一个共享变量的原子操作
+
+一个 CAS 操作只能保证一个共享变量的的原子性。
+
+解决方法：
+
+如果有多个共享变量可使用锁
+
+java1.5 之后提供了 AtomicReference 类来保证引用对象之间的原子性。可以将多个变量放进一个对象中然后进行 CAS 操作。
+
+[原子操作 CAS - 最小的线程安全](https://www.jianshu.com/p/fb4be165b06a)

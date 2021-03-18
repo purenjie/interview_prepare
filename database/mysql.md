@@ -235,3 +235,9 @@ CAS 只对单个共享变量有效，当操作涉及跨多个共享变量时 CAS
 - 更新语句
 
 分析器 ----》权限校验 ----》执行器 ---》引擎 ---redo log prepare---》binlog---》redo log commit
+
+## 日志
+
+[必须了解的 mysql 三大日志 - binlog、redo log 和 undo log](https://segmentfault.com/a/1190000023827696)
+
+[浅析 MySQL 事务中的 redo 与 undo](https://segmentfault.com/a/1190000017888478)

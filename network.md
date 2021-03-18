@@ -26,7 +26,7 @@ IP、ICMP、ARP
 
 HTTP：应用层
 
-HTTPS：会话层、表示层
+HTTPS：会话层（通过 SSL/TLS 进行非对称加密建立通话）
 
 HTTPS 相比 HTTP 多了一层 SSL/TLS
 
@@ -38,9 +38,7 @@ HTTPS 相比 HTTP 多了一层 SSL/TLS
 
 HTTP 是 80 端口；HTTPS 是 443 端口
 
-- **安全性和资源消耗**
-
-HTTP 安全性没有 HTTPS 高，但是 HTTPS 比 HTTP 耗费更多服务器资源。
+- **安全性**
 
 HTTP 协议运行在 TCP 之上，所有传输的内容都是明文传输；HTTPS 相比 HTTP 多了一层 SSL/TLS，所有传输的内容都经过加密。
 
@@ -97,7 +95,7 @@ HTTP/1.0 中默认使用短连接，从 HTTP/1.1 起，默认使用长连接，�
 ### HTTP/1.0 和 HTTP/1.1 的区别?
 
 - **长连接** : 在HTTP/1.0中，默认使用的是短连接，HTTP 1.1起，默认使用长连接。默认开启 Connection： keep-alive（HTTP/1.1 的持续连接有非流水线方式（收到响应报文之前就能发送新的请求报文）和流水线方式）
-- **错误状态响应码**：在HTTP1.1中新增了 24 个错误状态响应码，如 409（Conflict）表示请求的资源与资源的当前状态发生冲突；410（Gone）表示服务器上的某个资源被永久性的删除。
+- **错误状态响应码**：在 HTTP1.1 中新增了 24 个错误状态响应码，如 409（Conflict）表示请求的资源与资源的当前状态发生冲突；410（Gone）表示服务器上的某个资源被永久性的删除。
 
 - **缓存处理** :在 HTTP1.0 中主要使用 header 里的 If-Modified-Since,Expires 来做为缓存判断的标准，HTTP1.1 则引入了更多的缓存控制策略例如 Entity tag，If-Match，If-None-Match，If-Unmodified-Since 等更多可供选择的**缓存头**来控制缓存策略。
 - **带宽优化**：在 HTTP1.0 中客户端请求资源时服务器会传送整个对象，有时会浪费带宽。在 HTTP/1.1 的请求头中引入了 range 头域，它允许只请求部分资源，其使得开发者可以多线程请求某一资源，从而充分的利用带宽资源，实现高效并发。
@@ -147,11 +145,13 @@ HTTP 协议自身不对请求和响应之间的通信状态进行保存。
 
 （Cookie 和 Session都是用来**跟踪浏览器用户身份的会话方式**，但是两者的应用场景不太一样。）
 
-Cookies 保存在客户端，Session 保存在服务器上。
+Cookie 保存在客户端，Session 保存在服务器上。
+
+Cookie 存放在本地浏览器，可能会产生安全问题 
+
+Session 的实现依赖于 Cookie，经常会把 Session ID 存放在 Cookie 中。
 
 Cookies 可以用来跟踪会话，也可以保存用户的特点或者用户名密码之类的信息。Session 用来跟踪会话。
-
-Session 的实现依赖于 Cookies，经常会把 Session ID 存放在 Cookies 中。
 
 ### GET 和 POST 的区别？
 
@@ -268,11 +268,15 @@ Session 的实现依赖于 Cookies，经常会把 Session ID 存放在 Cookies �
 
 第二次：服务器——>客户端 `ACK=1 ack=u+1 seq=v`
 
+服务器进入 CLOSE_WAIT 状态
+
 第三次：服务器——>客户端 `FIN=1 ACK=1 ack=u+1 seq=w`
 
 第四次：客户端——>服务器 `ACK=1 ack=w+1 seq=u+1`
 
 客户端进入 TIME-WAIT 状态，等待 2 MSL（最大报文存活时间）后释放连接
+
+![四次挥手](https://img-blog.csdnimg.cn/20200308171409195.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2ZhbnJlbjIyNA==,size_16,color_FFFFFF,t_70)
 
 **为什么四次挥手？**
 
@@ -291,6 +295,29 @@ TIME_WAIT 状态等待 **2 倍 MSL**(Max Segment Lifetime)
 2. 保证这次连接的重复数据段从网络中消失
 
 如果主动端 CLOSED 后又建立了相同端口的 TCP 连接，可能会出现数据包的混淆。
+
+#### 机器有大量 time_wait 连接
+
+**出现原因**
+
+在 `高并发短连接` 的 TCP 服务器上，当服务器处理完请求后立刻按照主动正常关闭连接这个场景下，会出现大量 socket 处于 TIMEWAIT 状态。
+
+> 为什么服务器会进入 TIMEWAIT 状态？
+>
+> 服务器（MySQL 服务器）接收客户端 quit 命令后，等待客户端发送 FIN 断开连接效率低，所以服务器主动断开连接，就会进入 TIMEWAIT 状态
+>
+> [机器上出现大量 time_wait 怎么办](https://blog.csdn.net/fanren224/article/details/89849276)
+
+**产生问题**
+
+TIME_WAIT 状态下仍然占用端口，服务器一共有 6w 多个端口（一个 IP 地址的端口通过 16 bit（比特）进行编号，最多可以有 65536 个端口），会出现客户端无法向服务端创建新的 socket 连接的情况。
+
+**解决方法**
+
+- 客户端改用长连接（长连接比短连接从根本上减少了关闭连接的次数，减少了 TIME_WAIT 状态的产生数量）
+- 客户端在断开连接时，不用 quit 的方式退出，直接发 FIN 或者 RST
+
+- 修改 linux 内核减小 MSL 时间
 
 ### TCP 如何保证可靠传输？
 

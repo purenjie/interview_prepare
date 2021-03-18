@@ -39,6 +39,14 @@
 - [54. 螺旋矩阵](#54-螺旋矩阵)
 - [55. 跳跃游戏 @贪心](#55-跳跃游戏-贪心)
 - [45. 跳跃游戏 II](#45-跳跃游戏-ii)
+- [56. 合并区间](#56-合并区间)
+- [62. 不同路径](#62-不同路径)
+- [66. 加一](#66-加一)
+- [70. 爬楼梯](#70-爬楼梯)
+- [73. 矩阵置零](#73-矩阵置零)
+- [75. 颜色分类](#75-颜色分类)
+- [76. 最小覆盖子串 #hard @滑动窗口](#76-最小覆盖子串-hard-滑动窗口)
+- [79. 单词搜索 @回溯](#79-单词搜索-回溯)
 
 <!-- /TOC -->
 #### 1. 两数之和 @哈希
@@ -72,7 +80,7 @@ class Solution {
 }
 ```
 
-> [167. 两数之和 II - 输入有序数组](https://leetcode-cn.com/problems/two-sum-ii-input-array-is-sorted/)
+> [167. 两数之和 II - 输入有序数组 @双指针](https://leetcode-cn.com/problems/two-sum-ii-input-array-is-sorted/)
 
 ```java
 // 当数组有序时考虑双指针的方法
@@ -2016,6 +2024,266 @@ class Solution {
             pre2 = res;
         }
         return res;
+    }
+}
+```
+
+#### 73. 矩阵置零
+
+[题目链接](https://leetcode-cn.com/problems/set-matrix-zeroes/)
+
+```
+输入: 
+[
+  [1,1,1],
+  [1,0,1],
+  [1,1,1]
+]
+输出: 
+[
+  [1,0,1],
+  [0,0,0],
+  [1,0,1]
+]
+```
+
+- 解法一：记录元素所在行列
+
+时间复杂度：O(m*n)
+
+空间复杂度：O(m+n)
+
+```java
+class Solution {
+    public void setZeroes(int[][] matrix) {
+        if(matrix == null)  return;
+
+        Set<Integer> rows = new HashSet<>();
+        Set<Integer> cols = new HashSet<>();
+
+        int row = matrix.length;
+        int col = matrix[0].length;
+        for(int i = 0; i < row; i++) {
+            for(int j = 0; j < col; j++) {
+                if(matrix[i][j] == 0) {
+                    rows.add(i);
+                    cols.add(j);
+                }
+            }
+        }
+
+        for(int r : rows)   Arrays.fill(matrix[r], 0);
+        for(int i = 0; i < row; i++) {
+            for(int c : cols) {
+                matrix[i][c] = 0;
+            }
+        }
+    }
+}
+```
+
+- 解法二：将元素所在行列赋值为范围外的值
+
+时间复杂度：O(m*n)
+
+空间复杂度：O(1)
+
+- 解法三：第一行第一列单独讨论
+
+因为 `matrix[0][0]` 关系到第一行和第一列，所以需要额外考虑。设置 isCol 标志该列。
+
+时间复杂度：O(m*n)
+
+空间复杂度：O(1)
+
+```java
+class Solution {
+    public void setZeroes(int[][] matrix) {
+        if(matrix == null || matrix.length == 0)    return;
+
+        int rows = matrix.length;
+        int cols = matrix[0].length;
+        boolean isCol = false;
+
+        for(int i = 0; i < rows; i++) {
+            // 第一列有 0，该列需要置 0
+            // 要放在前面，否则可能该列值会被“污染“变为 0
+            if(matrix[i][0] == 0)   isCol = true;
+
+            for(int j = 1; j < cols; j++) {
+                if(matrix[i][j] == 0) {
+                    matrix[i][0] = 0;
+                    matrix[0][j] = 0;
+                }
+            }
+        }
+
+        for(int i = 1; i < rows; i++) {
+            for(int j = 1; j < cols; j++) {
+                if(matrix[i][0] == 0 || matrix[0][j] == 0)  matrix[i][j] = 0;
+            }
+        }
+
+        if(matrix[0][0] == 0)   Arrays.fill(matrix[0], 0);
+        if(isCol) {
+            for(int i = 0; i < rows; i++)   matrix[i][0] = 0;
+        }
+    }
+}
+```
+
+#### 75. 颜色分类
+
+[题目链接](https://leetcode-cn.com/problems/sort-colors/)
+
+```
+输入：nums = [2,0,2,1,1,0]
+输出：[0,0,1,1,2,2]
+```
+
+```java
+class Solution {
+    // 双指针
+    public void sortColors(int[] nums) {
+        int p0 = 0, p2 = nums.length - 1;
+        for(int i = 0; i <= p2; i++) {
+            while(i <= p2 && nums[i] == 2) {
+                swap(nums, i, p2);
+                p2--;
+            }
+
+            if(nums[i] == 0) {
+                swap(nums, i, p0);
+                p0++;
+            }
+        }
+    }
+
+    public void swap(int[] nums, int i, int j) {
+        int tmp = nums[i];
+        nums[i] = nums[j];
+        nums[j] = tmp;
+    }
+}
+```
+
+#### 76. 最小覆盖子串 #hard @滑动窗口
+
+[题目链接](https://leetcode-cn.com/problems/minimum-window-substring/)
+
+```
+输入：s = "ADOBECODEBANC", t = "ABC"
+输出："BANC"
+```
+
+滑动窗口的四个问题：
+
+1. 当移动 right 扩大窗口，即加入字符时，应该更新哪些数据？
+
+2. 什么条件下，窗口应该暂停扩大，开始移动 left 缩小窗口？
+
+3. 当移动 left 缩小窗口，即移出字符时，应该更新哪些数据？
+
+4. 我们要的结果应该在扩大窗口时还是缩小窗口时进行更新？
+
+```java
+class Solution {
+    public String minWindow(String s, String t) {
+        Map<Character, Integer> need = new HashMap<>();
+        Map<Character, Integer> window = new HashMap<>();
+        int valid = 0;
+        int start = 0, length = Integer.MAX_VALUE;
+
+        for(char c : t.toCharArray())   need.put(c, need.getOrDefault(c, 0) + 1);
+
+        int left = 0, right = 0;
+        while(right < s.length()) {
+            // 1. right -> update window valid
+            char c = s.charAt(right);
+            right++;
+            if(need.containsKey(c)) {
+                window.put(c, window.getOrDefault(c, 0) + 1);
+                if(window.get(c).equals(need.get(c)))   valid++;
+            }
+
+            // 2. stop -> condition
+            while(valid == need.size()) {
+                // result update
+                if(right - left < length) {
+                    start = left;
+                    length = right - left;
+                }
+
+                // 3. left -> update window valid
+                char d = s.charAt(left);
+                left++;
+                if(need.containsKey(d)) {
+                    if(window.get(d).equals(need.get(d)))   valid--;
+                    window.put(d, window.get(d) - 1);
+                }
+            }
+        }
+
+        return length == Integer.MAX_VALUE ? "" : s.substring(start, start + length);
+    }
+}
+```
+
+#### 79. 单词搜索 @回溯
+
+[题目链接](https://leetcode-cn.com/problems/word-search/)
+
+```
+board =
+[
+  ['A','B','C','E'],
+  ['S','F','C','S'],
+  ['A','D','E','E']
+]
+
+给定 word = "ABCCED", 返回 true
+给定 word = "SEE", 返回 true
+给定 word = "ABCB", 返回 false
+```
+
+```
+class Solution {kv
+    public boolean exist(char[][] board, String word) {
+        int rows = board.length;
+        int cols = board[0].length;
+        boolean res = false;
+        boolean[][] visited = new boolean[rows][cols];
+
+        for(int i = 0; i < rows; i++) {
+            for(int j = 0; j < cols; j++) {
+                res = backtrack(board, i, j, visited, 0, word);
+                if(res) return true;
+            }
+        }
+
+        return false;
+    }
+
+    public boolean backtrack(char[][] board, int row, int col, boolean[][] visited, int start, String word) {
+        if(board[row][col] != word.charAt(start))   return false;
+        else if(start == word.length() - 1)     return true;
+
+        // 做选择
+        visited[row][col] = true;
+        int[][] directions = {{0, 1}, {0, -1}, {1, 0}, {-1, 0}};
+        for(int[] direction : directions) {
+            int newRow = row + direction[0];
+            int newCol = col + direction[1];
+            if(newRow >= 0 && newRow < board.length && newCol >= 0 && newCol < board[0].length) {
+                if(!visited[newRow][newCol]) {
+                    boolean flag = backtrack(board, newRow, newCol, visited, start + 1, word);
+                    if(flag)    return true;
+                }
+            }
+        }
+        // 撤销选择
+        visited[row][col] = false;
+        return false;
     }
 }
 ```

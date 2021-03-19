@@ -2246,44 +2246,78 @@ board =
 给定 word = "ABCB", 返回 false
 ```
 
-```
-class Solution {kv
+```java
+class Solution {
     public boolean exist(char[][] board, String word) {
         int rows = board.length;
         int cols = board[0].length;
-        boolean res = false;
         boolean[][] visited = new boolean[rows][cols];
 
         for(int i = 0; i < rows; i++) {
             for(int j = 0; j < cols; j++) {
-                res = backtrack(board, i, j, visited, 0, word);
-                if(res) return true;
+                boolean flag = backtrack(board, i, j, visited, 0, word);
+                if(flag)    return true;
             }
         }
-
         return false;
     }
 
     public boolean backtrack(char[][] board, int row, int col, boolean[][] visited, int start, String word) {
+        // 跳出条件
         if(board[row][col] != word.charAt(start))   return false;
         else if(start == word.length() - 1)     return true;
 
-        // 做选择
+        // 在选择列表做选择
         visited[row][col] = true;
         int[][] directions = {{0, 1}, {0, -1}, {1, 0}, {-1, 0}};
-        for(int[] direction : directions) {
-            int newRow = row + direction[0];
-            int newCol = col + direction[1];
+        for(int[] dire : directions) {
+            int newRow = row + dire[0];
+            int newCol = col + dire[1];
+            // 移动后没有超过边界
             if(newRow >= 0 && newRow < board.length && newCol >= 0 && newCol < board[0].length) {
                 if(!visited[newRow][newCol]) {
+                    // backtrack
                     boolean flag = backtrack(board, newRow, newCol, visited, start + 1, word);
                     if(flag)    return true;
                 }
+
             }
         }
         // 撤销选择
         visited[row][col] = false;
         return false;
+    }
+}
+```
+
+#### 88. 合并两个有序数组 @数组指针
+
+[题目链接](https://leetcode-cn.com/problems/merge-sorted-array/)
+
+```
+输入：nums1 = [1,2,3,0,0,0], m = 3, nums2 = [2,5,6], n = 3
+输出：[1,2,2,3,5,6]
+```
+
+```java
+class Solution {
+    public void merge(int[] nums1, int m, int[] nums2, int n) {
+        // 三指针：m-1 n-1 m+n-1 都左移
+        // nums2 为空时返回，nums1 为空时继续给 nums2 赋值
+        int p1 = m - 1, p2 = n - 1;
+        int q = m + n - 1;
+        while(p1 >= 0 && p2 >= 0) {
+            if(nums2[p2] >= nums1[p1])   nums1[q--] = nums2[p2--];
+            else    nums1[q--] = nums1[p1--];
+        }
+
+        if(p2 < 0)  return;
+        if(p1 < 0) {
+            while(p2 >= 0) {
+                nums1[q--] = nums2[p2--];
+            }
+        }
+        return;
     }
 }
 ```

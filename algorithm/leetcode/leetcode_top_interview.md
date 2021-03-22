@@ -47,6 +47,9 @@
 - [75. 颜色分类](#75-颜色分类)
 - [76. 最小覆盖子串 #hard @滑动窗口](#76-最小覆盖子串-hard-滑动窗口)
 - [79. 单词搜索 @回溯](#79-单词搜索-回溯)
+- [88. 合并两个有序数组 @数组指针](#88-合并两个有序数组-数组指针)
+- [91. 解码方法 @DP](#91-解码方法-dp)
+- [94. 二叉树的中序遍历](#94-二叉树的中序遍历)
 
 <!-- /TOC -->
 #### 1. 两数之和 @哈希
@@ -2318,6 +2321,119 @@ class Solution {
             }
         }
         return;
+    }
+}
+```
+
+#### 91. 解码方法 @DP
+
+之后可以考虑状态压缩
+
+[题目链接](https://leetcode-cn.com/problems/decode-ways/)
+
+```
+输入：s = "12"
+输出：2
+解释：它可以解码为 "AB"（1 2）或者 "L"（12）。
+```
+
+```java
+class Solution {
+    public int numDecodings(String s) {
+        // dp[i] s[:i] 的解码总数
+        int n = s.length();
+        int[] dp = new int[n+1];
+        dp[0] = 1; dp[1] = 1;
+        if(s.length() == 0 || s.charAt(0) == '0')    return 0; // 对应 d[0] dp[1]
+        for(int i = 2; i <= n; i++) {
+            // 当前位置为 0,看前面是不是 1 or 2
+            if(s.charAt(i-1) == '0') {
+                if(s.charAt(i-2) != '1' && s.charAt(i-2) != '2')    return 0;
+                else    dp[i] = dp[i-2];
+            } else { // 当前位置不是 0
+                // 有两种组合的情形是：s[i-1]==1    s[i-1]==2 && 1<=s[i]<=6
+                if(s.charAt(i-2) == '1' || (s.charAt(i-2) == '2' && s.charAt(i-1) >= '1' && s.charAt(i-1) <= '6'))  dp[i] = dp[i-1] + dp[i-2];
+                else    dp[i] = dp[i-1];
+            }
+        }
+        return dp[n];
+    }
+}
+```
+
+状态压缩
+
+```java
+class Solution {
+    public int numDecodings(String s) {
+        // dp[i] s[:i] 的解码总数
+        int n = s.length();
+        int res = 1;
+        int pre2 = 1,  pre1 = 1; // pre2 和 pre1 分别对应 dp[i-2] dp[i-1]
+        if(s.length() == 0 || s.charAt(0) == '0')    return 0; // 对应 d[0] dp[1]
+        for(int i = 2; i <= n; i++) {
+            // 当前位置为 0,看前面是不是 1 or 2
+            if(s.charAt(i-1) == '0') {
+                if(s.charAt(i-2) != '1' && s.charAt(i-2) != '2')    return 0;
+                else res = pre2;
+            } else { // 当前位置不是 0
+                // 有两种组合的情形是：s[i-1]==1    s[i-1]==2 && 1<=s[i]<=6
+                if(s.charAt(i-2) == '1' || (s.charAt(i-2) == '2' && s.charAt(i-1) >= '1' && s.charAt(i-1) <= '6'))  res = pre1 + pre2;
+                else    res = pre1;
+            }
+            pre2 = pre1;
+            pre1 = res;
+        }
+        return res;
+    }
+}
+```
+
+#### 94. 二叉树的中序遍历
+
+[题目链接](https://leetcode-cn.com/problems/binary-tree-inorder-traversal/)
+
+```
+输入：root = [1,null,2,3]
+输出：[1,3,2]
+```
+
+```java
+// 递归
+class Solution {
+    List<Integer> res = new ArrayList<>();
+    public List<Integer> inorderTraversal(TreeNode root) {
+        traverse(root);
+        return res;
+    }
+
+    public void traverse(TreeNode root) {
+        if(root == null)    return;
+        traverse(root.left);
+        res.add(root.val);
+        traverse(root.right);
+    }
+}
+```
+
+```java
+// 迭代
+class Solution {
+    public List<Integer> inorderTraversal(TreeNode root) {
+        List<Integer> res = new ArrayList<>();
+        Deque<TreeNode> stack = new LinkedList<>();
+        while(root != null || !stack.isEmpty()) {
+            if(root != null) {
+                stack.push(root);
+                root = root.left;
+            } else {
+                root = stack.peek();
+                stack.pop();
+                res.add(root.val);
+                root = root.right;
+            }
+        }
+        return res;
     }
 }
 ```
